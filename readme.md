@@ -7,5 +7,6 @@ This project is based on Microsfts&copy; [MiniEngine](https://github.com/microso
 ![image](https://github.com/sienaiwun/Dx12Practice/blob/master/Images/compute.gif?raw=true)
 
 ## Gpu Tiles Culling:
-* Accelerate draw-calle submitions by GPU-based tiles culling and using indirect draw calls. Each color block is a quad draw. The shape is inspaird by [Heart - 2D](https://www.shadertoy.com/view/XsfGRn)
+* Accelerate draw-calls submitions using indirect draw calls generated from GPU-based tiles culling. 
+In the following image, each color block is a quad draw-call. The shape is inspaird by [Heart - 2D](https://www.shadertoy.com/view/XsfGRn)
 ![image](https://github.com/sienaiwun/Dx12Practice/blob/master/Images/IndirectDraw.gif?raw=true)
