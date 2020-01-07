@@ -1,17 +1,11 @@
-# MiniEngine by Team Minigraph at Microsoft
+# D3D12 practice
+This project is based on Microsfts&copy; [MiniEngine](https://github.com/microsoft/DirectX-Graphics-Samples/tree/master/MiniEngine). Besides that I add some toy demos
+## Entry
+* Open ModelViewer/ModelViewer_VS15.sln
+## Computer shader:
+* A simple Computer shader example inspaird by [Plantary Gear](https://www.shadertoy.com/view/MsGczV)
+![image](https://github.com/sienaiwun/Dx12Practice/blob/master/Images/compute.gif?raw=true)
 
-## Getting started:
-* Open ModelViewer/ModelViewer_VS14.sln
-* Select configuration: Debug (full validation), Profile (instrumented), Release
-* Select platform
-* Build and run
-
-## Controls:
-* forward/backward/strafe: left thumbstick or WASD (FPS controls)
-* up/down: triggers or E/Q
-* yaw/pitch: right thumbstick or mouse
-* toggle slow movement: click left thumbstick or lshift
-* open debug menu: back button or backspace
-* navigate debug menu: dpad or arrow keys
-* toggle debug menu item: A button or return
-* adjust debug menu value: dpad left/right or left/right arrow keys
+## Gpu Tiles Culling:
+* Accelerate draw-calle submitions by GPU-based tiles culling and using indirect draw calls. Each color block is a quad draw. The shape is inspaird by [Heart - 2D](https://www.shadertoy.com/view/XsfGRn)
+![image](https://github.com/sienaiwun/Dx12Practice/blob/master/Images/IndirectDraw.gif?raw=true)
