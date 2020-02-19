@@ -15,12 +15,12 @@
     </ProjectConfiguration>
   </ItemGroup>
   <PropertyGroup Label="Globals">
-    <ProjectGuid>{1813BD6E-E2AF-4A3C-8C54-4E72119DA993}</ProjectGuid>
+    <ProjectGuid>{B862AF02-EE2E-4E6C-8C8C-049AEC55433B}</ProjectGuid>
     <ApplicationEnvironment>title</ApplicationEnvironment>
     <DefaultLanguage>en-US</DefaultLanguage>
     <Keyword>Win32Proj</Keyword>
-    <ProjectName>ModelViewer</ProjectName>
-    <RootNamespace>ModelViewer</RootNamespace>
+    <ProjectName>VirtualTexture</ProjectName>
+    <RootNamespace>VirtualTexture</RootNamespace>
     <PlatformToolset>v141</PlatformToolset>
     <MinimumVisualStudioVersion>15.0</MinimumVisualStudioVersion>
     <TargetRuntime>Native</TargetRuntime>
@@ -84,7 +84,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="Light.cpp" />
-    <ClCompile Include="ModelViewer.cpp" />
+    <ClCompile Include="VirtualTexture.cpp" />
     <ClCompile Include="World.cpp" />
   </ItemGroup>
   <ItemGroup>

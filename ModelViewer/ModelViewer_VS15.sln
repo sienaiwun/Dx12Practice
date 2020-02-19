@@ -13,6 +13,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Compute", "..\Compute\Compu
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "IndirectDraw", "..\IndirectDraw\IndirectDraw.vcxproj", "{210BAE90-6E8F-4BAA-882F-337F5C975AAA}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "VirtualTexture", "..\VirtualTexture\VirtualTexture.vcxproj", "{B862AF02-EE2E-4E6C-8C8C-049AEC55433B}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Windows = Debug|Windows
@@ -97,6 +99,18 @@ Global
 		{210BAE90-6E8F-4BAA-882F-337F5C975AAA}.Release|x64.ActiveCfg = Release|x64
 		{210BAE90-6E8F-4BAA-882F-337F5C975AAA}.Release|x64.Build.0 = Release|x64
 		{210BAE90-6E8F-4BAA-882F-337F5C975AAA}.Release|x86.ActiveCfg = Release|x64
+		{B862AF02-EE2E-4E6C-8C8C-049AEC55433B}.Debug|Windows.ActiveCfg = Debug|x64
+		{B862AF02-EE2E-4E6C-8C8C-049AEC55433B}.Debug|x64.ActiveCfg = Debug|x64
+		{B862AF02-EE2E-4E6C-8C8C-049AEC55433B}.Debug|x64.Build.0 = Debug|x64
+		{B862AF02-EE2E-4E6C-8C8C-049AEC55433B}.Debug|x86.ActiveCfg = Debug|x64
+		{B862AF02-EE2E-4E6C-8C8C-049AEC55433B}.Profile|Windows.ActiveCfg = Profile|x64
+		{B862AF02-EE2E-4E6C-8C8C-049AEC55433B}.Profile|x64.ActiveCfg = Profile|x64
+		{B862AF02-EE2E-4E6C-8C8C-049AEC55433B}.Profile|x64.Build.0 = Profile|x64
+		{B862AF02-EE2E-4E6C-8C8C-049AEC55433B}.Profile|x86.ActiveCfg = Profile|x64
+		{B862AF02-EE2E-4E6C-8C8C-049AEC55433B}.Release|Windows.ActiveCfg = Release|x64
+		{B862AF02-EE2E-4E6C-8C8C-049AEC55433B}.Release|x64.ActiveCfg = Release|x64
+		{B862AF02-EE2E-4E6C-8C8C-049AEC55433B}.Release|x64.Build.0 = Release|x64
+		{B862AF02-EE2E-4E6C-8C8C-049AEC55433B}.Release|x86.ActiveCfg = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

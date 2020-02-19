@@ -526,15 +526,4 @@ material diffuse tex:models/whitematerial 14
 material diffuse tex:models/sponza_flagpolematerial 15
 material diffuse tex:models/sponza_fabric_greenmaterial 16
 material diffuse tex:models/sponza_fabric_bluematerial 17
-material diffuse tex:models/sponza_fabricmaterial 18
-material diffuse tex:models/sponza_curtain_bluematerial 19
-material diffuse tex:models/sponza_curtainmaterial 20
-material diffuse tex:models/sponza_curtain_greenmaterial 21
-material diffuse tex:models/chain_texturematerial 22
-material diffuse tex:models/vase_hangingmaterial 23
-material diffuse tex:models/vasematerial 24
-material diffuse tex:models/lionmaterial 25
-material diffuse tex:models/sponza_roofmaterial 26
-
-Changing display resolution to 1920x1061
-Loaded SDF font:  default (ver. 1.0)
+material diffuse tex:models/sponza_fabricmate
