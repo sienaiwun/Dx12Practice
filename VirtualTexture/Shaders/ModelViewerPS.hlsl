@@ -31,11 +31,12 @@ struct VSOutput
     sample float3 normal : Normal;
     sample float3 tangent : Tangent;
     sample float3 bitangent : Bitangent;
+    sample float mipmapCount : TexCoord3;
 };
 
 Texture2D<float3> texDiffuse        : register(t0);
 Texture2D<float3> texSpecular        : register(t1);
-//Texture2D<float4> texEmissive        : register(t2);
+Texture2D<float4> texSparse        : register(t2);
 Texture2D<float3> texNormal            : register(t3);
 //Texture2D<float4> texLightmap        : register(t4);
 //Texture2D<float4> texReflection    : register(t5);
@@ -97,7 +98,8 @@ float2 EncodeUnitVector_CryEngine(float3 u)
 float3 main(VSOutput vsOutput) : SV_Target0
 {
     uint2 pixelPos = vsOutput.position.xy;
-    float3 diffuseAlbedo = texDiffuse.Sample(sampler0, vsOutput.uv);
+    float3 diffuseAlbedo = texSparse.SampleLevel(sampler0, vsOutput.uv, vsOutput.mipmapCount);
+  //  float3 diffuseAlbedo = texDiffuse.Sample(sampler0, vsOutput.uv);
     return  diffuseAlbedo;
     float3 colorSum = 0;
     {

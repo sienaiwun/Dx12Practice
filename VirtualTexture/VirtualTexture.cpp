@@ -147,6 +147,11 @@ private:
     const U32 m_resTexHeight;
     const U32 m_resTexPixelInBytes;
     std::vector<MipInfo> m_mips;
+    ComPtr<ID3D12Resource> m_reservedResource;
+    std::vector<ComPtr<ID3D12Heap>> m_heaps;
+    ComPtr<ID3D12Resource> m_uploadResource;
+    void UpdateTileMapping(GraphicsContext& gfxContext);
+    D3D12_CPU_DESCRIPTOR_HANDLE m_reserveTextureCpuHandle;
 };
 
 CREATE_APPLICATION(VirtureTexture)
@@ -319,6 +324,88 @@ void VirtureTexture::Startup( void )
     m_ExtraTextures[3] = lighting->GetLightShadowArray().GetSRV();
     m_ExtraTextures[4] = lighting->GetLightGrid().GetSRV();
     m_ExtraTextures[5] = lighting->GetLightGridBitMask().GetSRV();
+
+    {
+        // create reserved buffer
+        D3D12_RESOURCE_DESC reservedTextureDesc{};
+        reservedTextureDesc.MipLevels = static_cast<UINT16>(m_mips.size());
+        reservedTextureDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+        reservedTextureDesc.Width = m_resTexWidth;
+        reservedTextureDesc.Height = m_resTexHeight;
+        reservedTextureDesc.Flags = D3D12_RESOURCE_FLAG_NONE;
+        reservedTextureDesc.DepthOrArraySize = 1;
+        reservedTextureDesc.SampleDesc.Count = 1;
+        reservedTextureDesc.SampleDesc.Quality = 0;
+        reservedTextureDesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
+        reservedTextureDesc.Layout = D3D12_TEXTURE_LAYOUT_64KB_UNDEFINED_SWIZZLE;
+        ASSERT_SUCCEEDED(g_Device->CreateReservedResource(
+            &reservedTextureDesc,
+            D3D12_RESOURCE_STATE_COPY_DEST,
+            nullptr,
+            MY_IID_PPV_ARGS(&m_reservedResource)));
+
+        D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
+        srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+        srvDesc.Format = reservedTextureDesc.Format;
+        srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
+        srvDesc.Texture2D.MipLevels = reservedTextureDesc.MipLevels;
+        m_reserveTextureCpuHandle = AllocateDescriptor(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+        g_Device->CreateShaderResourceView(m_reservedResource.Get(), &srvDesc, m_reserveTextureCpuHandle);
+
+        const UINT64 resourceSize = GetRequiredIntermediateSize(m_reservedResource.Get(), 0, 1);
+
+        ASSERT_SUCCEEDED(g_Device->CreateCommittedResource(
+            &CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD),
+            D3D12_HEAP_FLAG_NONE,
+            &CD3DX12_RESOURCE_DESC::Buffer(resourceSize),
+            D3D12_RESOURCE_STATE_GENERIC_READ,
+            nullptr,
+            MY_IID_PPV_ARGS(&m_uploadResource)));
+
+
+        UINT numTiles = 0;
+        D3D12_TILE_SHAPE tileShape = {};
+        UINT subresourceCount = reservedTextureDesc.MipLevels;
+        std::vector<D3D12_SUBRESOURCE_TILING> tilings(subresourceCount);
+        g_Device->GetResourceTiling(m_reservedResource.Get(), &numTiles, &m_packedMipInfo, &tileShape, &subresourceCount, 0, &tilings[0]);
+        UINT heapCount = m_packedMipInfo.NumStandardMips + (m_packedMipInfo.NumPackedMips > 0 ? 1 : 0);
+        for (UINT n = 0; n < m_mips.size(); n++)
+        {
+            if (n < m_packedMipInfo.NumStandardMips)
+            {
+                m_mips[n].heapIndex = n;
+                m_mips[n].packedMip = false;
+                m_mips[n].mapped = false;
+                m_mips[n].startCoordinate = CD3DX12_TILED_RESOURCE_COORDINATE(0, 0, 0, n);
+                m_mips[n].regionSize.Width = tilings[n].WidthInTiles;
+                m_mips[n].regionSize.Height = tilings[n].HeightInTiles;
+                m_mips[n].regionSize.Depth = tilings[n].DepthInTiles;
+                m_mips[n].regionSize.NumTiles = tilings[n].WidthInTiles * tilings[n].HeightInTiles * tilings[n].DepthInTiles;
+                m_mips[n].regionSize.UseBox = TRUE;
+            }
+            else
+            {
+                // All of the packed mips will go into the last heap.
+                m_mips[n].heapIndex = heapCount - 1;
+                m_mips[n].packedMip = true;
+                m_mips[n].mapped = false;
+
+                // Mark all of the packed mips as having the same start coordinate and size.
+                m_mips[n].startCoordinate = CD3DX12_TILED_RESOURCE_COORDINATE(0, 0, 0, heapCount - 1);
+                m_mips[n].regionSize.NumTiles = m_packedMipInfo.NumTilesForPackedMips;
+                m_mips[n].regionSize.UseBox = FALSE;    // regionSize.Width/Height/Depth will be ignored.
+            }
+        }
+        m_heaps.resize(heapCount);
+        for (UINT n = 0; n < heapCount; n++)
+        {
+            const UINT heapSize = m_mips[n].regionSize.NumTiles * D3D12_DEFAULT_RESOURCE_PLACEMENT_ALIGNMENT;
+
+            CD3DX12_HEAP_DESC heapDesc(heapSize, D3D12_HEAP_TYPE_DEFAULT, 0, D3D12_HEAP_FLAG_DENY_BUFFERS | D3D12_HEAP_FLAG_DENY_RT_DS_TEXTURES);
+            ASSERT_SUCCEEDED(g_Device->CreateHeap(&heapDesc, IID_PPV_ARGS(&m_heaps[n])));
+        }
+        //UpdateTileMapping();
+    }
 }
 
 void VirtureTexture::Cleanup( void )
@@ -347,7 +434,7 @@ void VirtureTexture::Update( float deltaT )
             m_activeMipChanged = true;
         }
     }
-    else if (GameInput::IsFirstPressed(GameInput::kKey_up))
+    else if (GameInput::IsFirstPressed(GameInput::kKey_down))
     {
         if (m_activeMip != 0)
         {
@@ -419,6 +506,80 @@ __declspec(align(16)) struct
 }psWireFrameColorConstants;
 
 
+void VirtureTexture::UpdateTileMapping(GraphicsContext& gfxContext)
+{
+    U32 firstSubresource = m_mips[m_activeMip].heapIndex;
+    U32 subResourceCount = m_mips[m_activeMip].packedMip ? m_packedMipInfo.NumPackedMips : 1;
+    if (!m_mips[firstSubresource].mapped)
+    {
+        std::vector<UINT8> texture = GenerateTextureData(firstSubresource, subResourceCount);
+        // update mapping
+        UINT updatedRegions = 0;
+        std::vector<D3D12_TILED_RESOURCE_COORDINATE> startCoordinates;
+        std::vector<D3D12_TILE_REGION_SIZE> regionSizes;
+        std::vector<D3D12_TILE_RANGE_FLAGS> rangeFlags;
+        std::vector<UINT> heapRangeStartOffsets;
+        std::vector<UINT> rangeTileCounts;
+        for (size_t n = 0; n < m_heaps.size(); n++)
+        {
+            if (!m_mips[n].mapped && n != firstSubresource)
+            {
+                // Skip unchanged tile regions.
+                continue;
+            }
+            startCoordinates.push_back(m_mips[n].startCoordinate);
+            regionSizes.push_back(m_mips[n].regionSize);
+            if (n == firstSubresource)
+            {
+                // Map the currently active mip.
+                rangeFlags.push_back(D3D12_TILE_RANGE_FLAG_NONE);
+                m_mips[n].mapped = true;
+            }
+            else
+            {
+                // Unmap the previously active mip.
+                assert(m_mips[n].mapped);
+
+                rangeFlags.push_back(D3D12_TILE_RANGE_FLAG_NULL);
+                m_mips[n].mapped = false;
+            }
+            heapRangeStartOffsets.push_back(0);        // In this sample, each heap contains only one tile region.
+            rangeTileCounts.push_back(m_mips[n].regionSize.NumTiles);
+
+            updatedRegions++;
+        }
+        Graphics::g_CommandManager.GetCommandQueue()->UpdateTileMappings(
+                m_reservedResource.Get(),
+                updatedRegions,
+                &startCoordinates[0],
+                &regionSizes[0],
+                m_heaps[firstSubresource].Get(),
+                updatedRegions,
+                &rangeFlags[0],
+                &heapRangeStartOffsets[0],
+                &rangeTileCounts[0],
+                D3D12_TILE_MAPPING_FLAG_NONE
+                );
+        {
+            UINT mipOffset = 0;
+            std::vector<D3D12_SUBRESOURCE_DATA> data(subResourceCount);
+            for (UINT n = 0; n < subResourceCount; n++)
+            {
+                UINT currentMip = firstSubresource + n;
+
+                data[n].pData = &texture[mipOffset];
+                data[n].RowPitch = (m_resTexWidth >> currentMip) * m_resTexPixelInBytes;
+                data[n].SlicePitch = data[n].RowPitch * (m_resTexHeight >> currentMip);
+
+                mipOffset += static_cast<UINT>(data[n].SlicePitch);
+            }
+
+            UpdateSubresources(gfxContext.GetCommandList(), m_reservedResource.Get(), m_uploadResource.Get(), 0, firstSubresource, subResourceCount, &data[0]);
+        }
+    }
+    m_activeMipChanged = false;
+}
+
 void VirtureTexture::UpdateGpuWorld(GraphicsContext& gfxContext)
 {
     const Camera& cam = m_world.GetMainCamera();
@@ -445,6 +606,12 @@ void VirtureTexture::RenderObjects(GraphicsContext& gfxContext, const Matrix4& v
 {
 
 	cameraConstant.modelToProjection = viewProjMat;
+    if (m_activeMipChanged)
+    {
+        gfxContext.GetCommandList()->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(m_reservedResource.Get(), D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_COPY_DEST));
+        UpdateTileMapping(gfxContext);
+        gfxContext.GetCommandList()->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(m_reservedResource.Get(), D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE));
+    }
 
 	gfxContext.SetDynamicConstantBufferView(RootParams::CameraParam, sizeof(cameraConstant), &cameraConstant);
 
@@ -473,9 +640,10 @@ void VirtureTexture::RenderObjects(GraphicsContext& gfxContext, const Matrix4& v
 
 				materialIdx = mesh.materialIndex;
 				gfxContext.SetDynamicDescriptors(RootParams::MaterialsSRVs, 0, 6, model.GetSRVs(materialIdx));
+                gfxContext.SetDynamicDescriptor(RootParams::MaterialsSRVs, 2, m_reserveTextureCpuHandle);
 			}
 
-			gfxContext.SetConstants(RootParams::PerModelConstant, baseVertex, materialIdx);
+			gfxContext.SetConstants(RootParams::PerModelConstant, baseVertex, m_activeMip);
 
 			gfxContext.DrawIndexed(indexCount, startIndex, baseVertex);
 		}
