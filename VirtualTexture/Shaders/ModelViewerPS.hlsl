@@ -98,6 +98,7 @@ float3 main(VSOutput vsOutput) : SV_Target0
 {
     uint2 pixelPos = vsOutput.position.xy;
     float3 diffuseAlbedo = texDiffuse.Sample(sampler0, vsOutput.uv);
+    return  diffuseAlbedo;
     float3 colorSum = 0;
     {
         float ao = texSSAO[pixelPos];

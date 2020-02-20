@@ -250,6 +250,14 @@ void Model::ReleaseTextures()
     */
 }
 
+void Model::LoadTexture(const char * fileName, const int tex_index, const int material_index, bool sRGB)
+{
+    const ManagedTexture* MatTextures = TextureManager::LoadFromFile(fileName, sRGB);
+    if (!MatTextures->IsValid())
+        MatTextures = TextureManager::LoadFromFile(defaultDiffuseName.c_str(), true);
+    m_SRVs[material_index * 6 + tex_index] = MatTextures->GetSRV();
+}
+
 void Model::LoadTextures(void)
 {
     ReleaseTextures();

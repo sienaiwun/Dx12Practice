@@ -85,6 +85,7 @@ public:
     
 };
 
+using U8 = uint8_t;
 using U32 = uint32_t;
 using U32x1 = U32;
 using U32x2 = Array<U32, 2>;

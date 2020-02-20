@@ -1,4 +1,27 @@
 model stats:
+bounding box: <-513.846680, 78.822998, -370.648499> <486.153290, 78.822998, 629.351379>
+vertex data size: 6776
+index data size: 1200
+vertex data size depth-only: 1452
+
+mesh count: 1
+mesh 0
+vertices: 121
+indices: 600
+vertex stride: 56
+attrib 0: offset 0, normalized 0, components 3, format float
+attrib 1: offset 12, normalized 0, components 2, format float
+attrib 2: offset 20, normalized 0, components 3, format float
+attrib 3: offset 32, normalized 0, components 3, format float
+attrib 4: offset 44, normalized 0, components 3, format float
+vertices depth-only: 121
+vertex stride depth-only: 12
+attrib 0: offset 0, normalized 0, components 3, format float
+
+material count: 1
+material diffuse tex:models/material 0
+
+model stats:
 bounding box: <-52.786098, 55.799999, -174.000000> <47.213902, 155.800003, -74.000000>
 vertex data size: 1344
 index data size: 72
@@ -20,30 +43,6 @@ attrib 0: offset 0, normalized 0, components 3, format float
 
 material count: 1
 material diffuse tex:models/material 0
-
-model stats:
-bounding box: <-513.846680, 78.822998, -370.648499> <486.153290, 78.822998, 629.351379>
-vertex data size: 6776
-index data size: 1200
-vertex data size depth-only: 1452
-
-mesh count: 1
-mesh 0
-vertices: 121
-indices: 600
-vertex stride: 56
-attrib 0: offset 0, normalized 0, components 3, format float
-attrib 1: offset 12, normalized 0, components 2, format float
-attrib 2: offset 20, normalized 0, components 3, format float
-attrib 3: offset 32, normalized 0, components 3, format float
-attrib 4: offset 44, normalized 0, components 3, format float
-vertices depth-only: 121
-vertex stride depth-only: 12
-attrib 0: offset 0, normalized 0, components 3, format float
-
-material count: 2
-material diffuse tex:models/material 0
-material diffuse tex:models/material 1
 
 Changing display resolution to 1920x1061
 Loaded SDF font:  default (ver. 1.0)

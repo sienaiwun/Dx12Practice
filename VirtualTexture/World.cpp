@@ -25,10 +25,14 @@ namespace SceneView
 
 	void World::Create()
 	{
+
+        AddModel("Models/plane.obj");;
 		AddModel("Models/box.obj");
-		AddModel("Models/plane.obj");;
 
 		CaculateBoundingBox();
+        ForEach([&](Model& model) {
+            model.LoadTexture("smoke", 0);
+        });
 		//lights 
 		m_lighting->InitializeResources();
 		m_lighting->CreateRandomLights(GetBoundingBox().min, GetBoundingBox().max);

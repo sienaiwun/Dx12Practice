@@ -210,6 +210,7 @@ public:
 		return m_pMaterialIsCutout[index];
 	}
 
+    void LoadTexture(const char * fileName, const int tex_index, const int material_index = 0, bool sRGB = false);
 protected:
 
     bool LoadH3D(const char *filename);

@@ -74,12 +74,21 @@ enum RootParams
 	NumPassRootParams,
 };
 
-class ModelViewer : public GameCore::IGameApp
+struct MipInfo
+{
+    UINT heapIndex;
+    bool packedMip;
+    bool mapped;
+    D3D12_TILED_RESOURCE_COORDINATE startCoordinate;
+    D3D12_TILE_REGION_SIZE regionSize;
+};
+
+
+class VirtureTexture : public GameCore::IGameApp
 {
 public:
 
-    ModelViewer( void ) {}
-
+    VirtureTexture(void);
     virtual void Startup( void ) override;
     virtual void Cleanup( void ) override;
 
@@ -93,6 +102,8 @@ private:
     void RenderLightShadows(GraphicsContext& gfxContext);
 
     void UpdateGpuWorld(GraphicsContext& gfxContext);
+
+    std::vector<U8> GenerateTextureData(U32 firstMip, U32 lastMip);
 
     enum eObjectFilter { kOpaque = 0x1, kCutout = 0x2, kTransparent = 0x4, kAll = 0xF, kNone = 0x0 };
     void RenderObjects( GraphicsContext& Context, const Matrix4& ViewProjMat, eObjectFilter Filter = kAll);
@@ -128,9 +139,17 @@ private:
 
     Vector3 m_SunDirection;
     ShadowCamera m_SunShadow;
+
+    U8   m_activeMip;
+    bool m_activeMipChanged;
+    D3D12_PACKED_MIP_INFO m_packedMipInfo;
+    const U32 m_resTexWidth;
+    const U32 m_resTexHeight;
+    const U32 m_resTexPixelInBytes;
+    std::vector<MipInfo> m_mips;
 };
 
-CREATE_APPLICATION( ModelViewer )
+CREATE_APPLICATION(VirtureTexture)
 enum LightingType { kForward, kForward_plus, kDeferred ,kNumLightingModels};
 const char* LightingModelLabels[kNumLightingModels] = { "Forward", "Forward+", "Deferred"};
 EnumVar g_LightingModel("LightingModel", kForward_plus, kNumLightingModels, LightingModelLabels);
@@ -150,7 +169,19 @@ BoolVar ShowWireFrame("Application/Forward+/Show WireFrame", false);
 BoolVar EnableWaveOps("Application/Forward+/Enable Wave Ops", true);
 #endif
 
-void ModelViewer::Startup( void )
+VirtureTexture::VirtureTexture(void) : m_activeMip(0),
+m_activeMipChanged(true),m_resTexWidth(512),m_resTexHeight(512),m_resTexPixelInBytes(4)
+{
+    UINT mipLevels = 0;
+    for (UINT w = m_resTexWidth, h = m_resTexHeight; w > 0 && h > 0; w >>= 1, h >>= 1)
+    {
+        mipLevels++;
+    }
+    m_activeMip = static_cast<U8>( mipLevels - 1);    // Show the least detailed mip first.
+    m_mips.resize(mipLevels);
+}
+
+void VirtureTexture::Startup( void )
 {
 	freopen("stdout.txt","w+",stdout);
     SamplerDesc DefaultSamplerDesc;
@@ -290,7 +321,7 @@ void ModelViewer::Startup( void )
     m_ExtraTextures[5] = lighting->GetLightGridBitMask().GetSRV();
 }
 
-void ModelViewer::Cleanup( void )
+void VirtureTexture::Cleanup( void )
 {
     m_world.Clear();
 }
@@ -300,7 +331,7 @@ namespace Graphics
     extern EnumVar DebugZoom;
 }
 
-void ModelViewer::Update( float deltaT )
+void VirtureTexture::Update( float deltaT )
 {
     ScopedTimer _prof(L"Update State");
 
@@ -308,7 +339,22 @@ void ModelViewer::Update( float deltaT )
         DebugZoom.Decrement();
     else if (GameInput::IsFirstPressed(GameInput::kRShoulder))
         DebugZoom.Increment();
-
+    else if (GameInput::IsFirstPressed(GameInput::kKey_up))
+    {
+        if (m_activeMip < 10)
+        {
+            m_activeMip++;
+            m_activeMipChanged = true;
+        }
+    }
+    else if (GameInput::IsFirstPressed(GameInput::kKey_up))
+    {
+        if (m_activeMip != 0)
+        {
+            m_activeMip--;
+            m_activeMipChanged = true;
+        }
+    }
 	m_world.Update(deltaT);
 
     float costheta = cosf(m_SunOrientation);
@@ -373,7 +419,7 @@ __declspec(align(16)) struct
 }psWireFrameColorConstants;
 
 
-void ModelViewer::UpdateGpuWorld(GraphicsContext& gfxContext)
+void VirtureTexture::UpdateGpuWorld(GraphicsContext& gfxContext)
 {
     const Camera& cam = m_world.GetMainCamera();
     const Matrix4 invProjMat = Invert(cam.GetProjMatrix());
@@ -395,7 +441,7 @@ void ModelViewer::UpdateGpuWorld(GraphicsContext& gfxContext)
 
 }
 
-void ModelViewer::RenderObjects(GraphicsContext& gfxContext, const Matrix4& viewProjMat, eObjectFilter Filter)
+void VirtureTexture::RenderObjects(GraphicsContext& gfxContext, const Matrix4& viewProjMat, eObjectFilter Filter)
 {
 
 	cameraConstant.modelToProjection = viewProjMat;
@@ -436,7 +482,7 @@ void ModelViewer::RenderObjects(GraphicsContext& gfxContext, const Matrix4& view
 	});
 }
 
-void ModelViewer::RenderLightShadows(GraphicsContext& gfxContext)
+void VirtureTexture::RenderLightShadows(GraphicsContext& gfxContext)
 {
     ScopedTimer _prof(L"RenderLightShadows", gfxContext);
 
@@ -463,7 +509,7 @@ void ModelViewer::RenderLightShadows(GraphicsContext& gfxContext)
     ++LightIndex;
 }
 
-void ModelViewer::RenderScene( void )
+void VirtureTexture::RenderScene( void )
 {
     static bool s_ShowLightCounts = false;
     if (ShowWaveTileCounts != s_ShowLightCounts)
@@ -675,56 +721,59 @@ void ModelViewer::RenderScene( void )
     gfxContext.Finish();
 }
 
-void ModelViewer::CreateParticleEffects()
+void VirtureTexture::CreateParticleEffects()
 {
-    ParticleEffectProperties Effect = ParticleEffectProperties();
-    Effect.MinStartColor = Effect.MaxStartColor = Effect.MinEndColor = Effect.MaxEndColor = Color(1.0f, 1.0f, 1.0f, 0.0f);
-    Effect.TexturePath = L"sparkTex.dds";
+   
+}
 
-    Effect.TotalActiveLifetime = FLT_MAX;
-    Effect.Size = Vector4(4.0f, 8.0f, 4.0f, 8.0f);
-    Effect.Velocity = Vector4(20.0f, 200.0f, 50.0f, 180.0f);
-    Effect.LifeMinMax = XMFLOAT2(1.0f, 3.0f);
-    Effect.MassMinMax = XMFLOAT2(4.5f, 15.0f);
-    Effect.EmitProperties.Gravity = XMFLOAT3(0.0f, -100.0f, 0.0f);
-    Effect.EmitProperties.FloorHeight = -0.5f;
-    Effect.EmitProperties.EmitPosW = Effect.EmitProperties.LastEmitPosW = XMFLOAT3(-1200.0f, 185.0f, -445.0f);
-    Effect.EmitProperties.MaxParticles = 800;
-    Effect.EmitRate = 64.0f;
-    Effect.Spread.x = 20.0f;
-    Effect.Spread.y = 50.0f;
-    ParticleEffects::InstantiateEffect( Effect );
 
-    ParticleEffectProperties Smoke = ParticleEffectProperties();
-    Smoke.TexturePath = L"smoke.dds";
 
-    Smoke.TotalActiveLifetime = FLT_MAX;
-    Smoke.EmitProperties.MaxParticles = 25;
-    Smoke.EmitProperties.EmitPosW = Smoke.EmitProperties.LastEmitPosW = XMFLOAT3(1120.0f, 185.0f, -445.0f);
-    Smoke.EmitRate = 64.0f;
-    Smoke.LifeMinMax = XMFLOAT2(2.5f, 4.0f);
-    Smoke.Size = Vector4(60.0f, 108.0f, 30.0f, 208.0f);
-    Smoke.Velocity = Vector4(30.0f, 30.0f, 10.0f, 40.0f);
-    Smoke.MassMinMax = XMFLOAT2(1.0, 3.5);
-    Smoke.Spread.x = 60.0f;
-    Smoke.Spread.y = 70.0f;
-    Smoke.Spread.z = 20.0f;
-    ParticleEffects::InstantiateEffect( Smoke );
+std::vector<UINT8> VirtureTexture::GenerateTextureData(UINT firstMip, UINT mipCount)
+{
+    // Determine the size of the data required by the mips(s).
+    UINT dataSize = (m_resTexWidth >> firstMip) * (m_resTexHeight >> firstMip) * m_resTexPixelInBytes;
+    if (mipCount > 1)
+    {
+        // If generating more than 1 mip, double the size of the texture allocation
+        // (you will never need more than this).
+        dataSize *= 2;
+    }
+    std::vector<UINT8> data(dataSize);
+    UINT8* pData = &data[0];
 
-    ParticleEffectProperties Fire = ParticleEffectProperties();
-    Fire.MinStartColor = Fire.MaxStartColor = Fire.MinEndColor = Fire.MaxEndColor = Color(8.0f, 8.0f, 8.0f, 0.0f);
-    Fire.TexturePath = L"fire.dds";
+    UINT index = 0;
+    for (UINT n = 0; n < mipCount; n++)
+    {
+        const UINT currentMip = firstMip + n;
+        const UINT width = m_resTexWidth >> currentMip;
+        const UINT height = m_resTexHeight >> currentMip;
+        const UINT rowPitch = width * m_resTexPixelInBytes;
+        const UINT cellPitch = std::max(rowPitch >> 3, m_resTexPixelInBytes);    // The width of a cell in the checkboard texture.
+        const UINT cellHeight = std::max<U32>(height >> 3, 1);                        // The height of a cell in the checkerboard texture.
+        const UINT textureSize = rowPitch * height;
 
-    Fire.TotalActiveLifetime = FLT_MAX;
-    Fire.Size = Vector4(54.0f, 68.0f, 0.1f, 0.3f);
-    Fire.Velocity = Vector4 (10.0f, 30.0f, 50.0f, 50.0f);
-    Fire.LifeMinMax = XMFLOAT2(1.0f, 3.0f);
-    Fire.MassMinMax = XMFLOAT2(10.5f, 14.0f);
-    Fire.EmitProperties.Gravity = XMFLOAT3(0.0f, 1.0f, 0.0f);
-    Fire.EmitProperties.EmitPosW = Fire.EmitProperties.LastEmitPosW = XMFLOAT3(1120.0f, 125.0f, 405.0f);
-    Fire.EmitProperties.MaxParticles = 25;
-    Fire.EmitRate = 64.0f;
-    Fire.Spread.x = 1.0f;
-    Fire.Spread.y = 60.0f;
-    ParticleEffects::InstantiateEffect( Fire );
+        for (UINT m = 0; m < textureSize; m += m_resTexPixelInBytes)
+        {
+            UINT x = m % rowPitch;
+            UINT y = m / rowPitch;
+            UINT i = x / cellPitch;
+            UINT j = y / cellHeight;
+
+            if (i % 2 == j % 2)
+            {
+                pData[index++] = 0xff;    // R
+                pData[index++] = 0x00;    // G
+                pData[index++] = 0x00;    // B
+                pData[index++] = 0xff;    // A
+            }
+            else
+            {
+                pData[index++] = 0xff;    // R
+                pData[index++] = 0xff;    // G
+                pData[index++] = 0xff;    // B
+                pData[index++] = 0xff;    // A
+            }
+        }
+    }
+    return data;
 }
