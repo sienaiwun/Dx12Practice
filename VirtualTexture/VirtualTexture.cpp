@@ -148,7 +148,8 @@ private:
     const U32 m_resTexPixelInBytes;
     std::vector<MipInfo> m_mips;
     ComPtr<ID3D12Resource> m_reservedResource;
-    std::vector<ComPtr<ID3D12Heap>> m_heaps;
+    ComPtr<ID3D12Heap> m_heap;
+    std::vector<U32> m_heap_offsets;
     ComPtr<ID3D12Resource> m_uploadResource;
     void UpdateTileMapping(GraphicsContext& gfxContext);
     D3D12_CPU_DESCRIPTOR_HANDLE m_reserveTextureCpuHandle;
@@ -368,7 +369,7 @@ void VirtureTexture::Startup( void )
         UINT subresourceCount = reservedTextureDesc.MipLevels;
         std::vector<D3D12_SUBRESOURCE_TILING> tilings(subresourceCount);
         g_Device->GetResourceTiling(m_reservedResource.Get(), &numTiles, &m_packedMipInfo, &tileShape, &subresourceCount, 0, &tilings[0]);
-        UINT heapCount = m_packedMipInfo.NumStandardMips + (m_packedMipInfo.NumPackedMips > 0 ? 1 : 0);
+        UINT heapRangeCount = m_packedMipInfo.NumStandardMips + (m_packedMipInfo.NumPackedMips > 0 ? 1 : 0);
         for (UINT n = 0; n < m_mips.size(); n++)
         {
             if (n < m_packedMipInfo.NumStandardMips)
@@ -386,24 +387,26 @@ void VirtureTexture::Startup( void )
             else
             {
                 // All of the packed mips will go into the last heap.
-                m_mips[n].heapIndex = heapCount - 1;
+                m_mips[n].heapIndex = heapRangeCount - 1;
                 m_mips[n].packedMip = true;
                 m_mips[n].mapped = false;
 
                 // Mark all of the packed mips as having the same start coordinate and size.
-                m_mips[n].startCoordinate = CD3DX12_TILED_RESOURCE_COORDINATE(0, 0, 0, heapCount - 1);
+                m_mips[n].startCoordinate = CD3DX12_TILED_RESOURCE_COORDINATE(0, 0, 0, heapRangeCount - 1);
                 m_mips[n].regionSize.NumTiles = m_packedMipInfo.NumTilesForPackedMips;
                 m_mips[n].regionSize.UseBox = FALSE;    // regionSize.Width/Height/Depth will be ignored.
             }
         }
-        m_heaps.resize(heapCount);
-        for (UINT n = 0; n < heapCount; n++)
-        {
-            const UINT heapSize = m_mips[n].regionSize.NumTiles * D3D12_DEFAULT_RESOURCE_PLACEMENT_ALIGNMENT;
+        m_heap_offsets.resize(heapRangeCount);
+        UINT heapSize = 0;
+        for (UINT n = 0; n < heapRangeCount; n++)
+        {   
+            m_heap_offsets[n] = heapSize/ D3D12_DEFAULT_RESOURCE_PLACEMENT_ALIGNMENT;
+            heapSize += m_mips[n].regionSize.NumTiles * D3D12_DEFAULT_RESOURCE_PLACEMENT_ALIGNMENT;
 
-            CD3DX12_HEAP_DESC heapDesc(heapSize, D3D12_HEAP_TYPE_DEFAULT, 0, D3D12_HEAP_FLAG_DENY_BUFFERS | D3D12_HEAP_FLAG_DENY_RT_DS_TEXTURES);
-            ASSERT_SUCCEEDED(g_Device->CreateHeap(&heapDesc, IID_PPV_ARGS(&m_heaps[n])));
         }
+        CD3DX12_HEAP_DESC heapDesc(heapSize, D3D12_HEAP_TYPE_DEFAULT, 0, D3D12_HEAP_FLAG_DENY_BUFFERS | D3D12_HEAP_FLAG_DENY_RT_DS_TEXTURES);
+        ASSERT_SUCCEEDED(g_Device->CreateHeap(&heapDesc, IID_PPV_ARGS(&m_heap)));
         //UpdateTileMapping();
     }
 }
@@ -430,7 +433,7 @@ void VirtureTexture::Update( float deltaT )
     {
         if (m_activeMip < 10)
         {
-            m_activeMip++;
+            m_activeMip = std::min(9, m_activeMip + 1);
             m_activeMipChanged = true;
         }
     }
@@ -520,7 +523,7 @@ void VirtureTexture::UpdateTileMapping(GraphicsContext& gfxContext)
         std::vector<D3D12_TILE_RANGE_FLAGS> rangeFlags;
         std::vector<UINT> heapRangeStartOffsets;
         std::vector<UINT> rangeTileCounts;
-        for (size_t n = 0; n < m_heaps.size(); n++)
+        for (size_t n = 0; n < m_heap_offsets.size(); n++)
         {
             if (!m_mips[n].mapped && n != firstSubresource)
             {
@@ -543,7 +546,7 @@ void VirtureTexture::UpdateTileMapping(GraphicsContext& gfxContext)
                 rangeFlags.push_back(D3D12_TILE_RANGE_FLAG_NULL);
                 m_mips[n].mapped = false;
             }
-            heapRangeStartOffsets.push_back(0);        // In this sample, each heap contains only one tile region.
+            heapRangeStartOffsets.push_back(m_heap_offsets[n]);        // In this sample, each heap contains only one tile region.
             rangeTileCounts.push_back(m_mips[n].regionSize.NumTiles);
 
             updatedRegions++;
@@ -553,7 +556,7 @@ void VirtureTexture::UpdateTileMapping(GraphicsContext& gfxContext)
                 updatedRegions,
                 &startCoordinates[0],
                 &regionSizes[0],
-                m_heaps[firstSubresource].Get(),
+                m_heap.Get(),
                 updatedRegions,
                 &rangeFlags[0],
                 &heapRangeStartOffsets[0],
