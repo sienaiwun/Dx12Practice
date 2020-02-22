@@ -72,6 +72,71 @@ private:
     bool m_IsValid;
 };
 
+
+
+class TiledTexture : public GpuResource
+{
+public :
+    void Create(size_t Width, size_t Height, DXGI_FORMAT Format);
+    void Update(GraphicsContext& gfxContext);
+    void LevelUp()
+    {
+        if (m_activeMip < 10)
+        {
+            m_activeMip =  static_cast<U8>( std::min(9, m_activeMip + 1));
+            m_activeMipChanged = true;
+        }
+    }
+
+    void LevelDown()
+    {
+        if (m_activeMip != 0)
+        {
+            m_activeMip--;
+            m_activeMipChanged = true;
+        }
+    }
+
+    const U8 GetActiveMip()
+    {
+        return m_activeMip;
+    }
+
+    void UpdateTileMapping(GraphicsContext& gfxContext);
+    virtual void Destroy() override
+    {
+        GpuResource::Destroy();
+        // This leaks descriptor handles.  We should really give it back to be reused.
+        m_hCpuDescriptorHandle.ptr = 0;
+    }
+
+    const D3D12_CPU_DESCRIPTOR_HANDLE& GetSRV() const { return m_hCpuDescriptorHandle; }
+
+    bool operator!() { return m_hCpuDescriptorHandle.ptr == 0; }
+protected:
+    D3D12_CPU_DESCRIPTOR_HANDLE m_hCpuDescriptorHandle;
+private:
+    struct MipInfo
+    {
+        UINT heapIndex;
+        bool packedMip;
+        bool mapped;
+        D3D12_TILED_RESOURCE_COORDINATE startCoordinate;
+        D3D12_TILE_REGION_SIZE regionSize;
+    };
+    std::vector<UINT8> GenerateTextureData(UINT firstMip, UINT mipCount);
+    std::vector<MipInfo> m_mips;
+    std::vector<U32> m_heap_offsets;
+    U32 m_resTexPixelInBytes;
+    size_t m_resTexWidth, m_resTexHeight;
+    U8 m_activeMip;
+    bool m_activeMipChanged;
+    Microsoft::WRL::ComPtr<ID3D12Resource> m_uploadBuffer;
+    D3D12_PACKED_MIP_INFO m_packedMipInfo;
+    Microsoft::WRL::ComPtr<ID3D12Heap> m_heap;
+
+};
+
 namespace TextureManager
 {
     void Initialize( const std::wstring& TextureLibRoot );
