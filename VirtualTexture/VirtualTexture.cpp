@@ -43,17 +43,11 @@
 #include "CompiledShaders/DepthViewerPS.h"
 #include "CompiledShaders/ModelViewerVS.h"
 #include "CompiledShaders/ModelViewerPS.h"
-#include "CompiledShaders/ConstantColorPS.h"
-#include "CompiledShaders/ForwardPS.h"
-#include "CompiledShaders/GBufferPS.h"
-#include "CompiledShaders/DeferredShading.h"
-#include "CompiledShaders/ScreenQuadVS.h"
 #ifdef _WAVE_OP
 #include "CompiledShaders/DepthViewerVS_SM6.h"
 #include "CompiledShaders/ModelViewerVS_SM6.h"
 #include "CompiledShaders/ModelViewerPS_SM6.h"
 #endif
-#include "CompiledShaders/WaveTileCountPS.h"
 
 using namespace GameCore;
 using namespace Math;
@@ -64,12 +58,9 @@ using namespace Graphics;
 enum RootParams
 {
 	CameraParam,
-	LightingParam,
 	MaterialsSRVs,
-	LightingSRVs,
 	PerModelConstant,
 	PSGameCBuffer,
-	GBufferSRVs,
 	WorldParam,
 	NumPassRootParams,
 };
@@ -99,15 +90,12 @@ public:
 
 private:
 
-    void RenderLightShadows(GraphicsContext& gfxContext);
-
     void UpdateGpuWorld(GraphicsContext& gfxContext);
 
     std::vector<U8> GenerateTextureData(U32 firstMip, U32 lastMip);
 
     enum eObjectFilter { kOpaque = 0x1, kCutout = 0x2, kTransparent = 0x4, kAll = 0xF, kNone = 0x0 };
     void RenderObjects( GraphicsContext& Context, const Matrix4& ViewProjMat, eObjectFilter Filter = kAll);
-    void CreateParticleEffects();
   
 
     D3D12_VIEWPORT m_MainViewport;
@@ -117,10 +105,6 @@ private:
     GraphicsPSO m_DepthPSO;
     GraphicsPSO m_CutoutDepthPSO;
     GraphicsPSO m_ForwardPlusPSO;
-	GraphicsPSO m_GBufferPSO;
-	GraphicsPSO m_DefferedShadingPSO;
-	GraphicsPSO m_ForwardPSO;
-	GraphicsPSO m_ModelWireFramePSO;
 #ifdef _WAVE_OP
     GraphicsPSO m_DepthWaveOpsPSO;
     GraphicsPSO m_ModelWaveOpsPSO;
@@ -128,13 +112,11 @@ private:
     GraphicsPSO m_CutoutModelPSO;
     GraphicsPSO m_ShadowPSO;
     GraphicsPSO m_CutoutShadowPSO;
-    GraphicsPSO m_WaveTileCountPSO;
 
     D3D12_CPU_DESCRIPTOR_HANDLE m_DefaultSampler;
     D3D12_CPU_DESCRIPTOR_HANDLE m_ShadowSampler;
     D3D12_CPU_DESCRIPTOR_HANDLE m_BiasedDefaultSampler;
 
-    D3D12_CPU_DESCRIPTOR_HANDLE m_ExtraTextures[6];
     SceneView::World m_world;
 
     Vector3 m_SunDirection;
@@ -144,8 +126,8 @@ private:
 };
 
 CREATE_APPLICATION(VirtureTexture)
-enum LightingType { kForward, kForward_plus, kDeferred ,kNumLightingModels};
-const char* LightingModelLabels[kNumLightingModels] = { "Forward", "Forward+", "Deferred"};
+enum LightingType { kForward_plus ,kNumLightingModels};
+const char* LightingModelLabels[kNumLightingModels] = { "Forward+"};
 EnumVar g_LightingModel("LightingModel", kForward_plus, kNumLightingModels, LightingModelLabels);
 
 
@@ -157,8 +139,6 @@ NumVar ShadowDimX("Application/Lighting/Shadow Dim X", 5000, 1000, 10000, 100 );
 NumVar ShadowDimY("Application/Lighting/Shadow Dim Y", 3000, 1000, 10000, 100 );
 NumVar ShadowDimZ("Application/Lighting/Shadow Dim Z", 3000, 1000, 10000, 100 );
 
-BoolVar ShowWaveTileCounts("Application/Forward+/Show Wave Tile Counts", false);
-BoolVar ShowWireFrame("Application/Forward+/Show WireFrame", false);
 #ifdef _WAVE_OP
 BoolVar EnableWaveOps("Application/Forward+/Enable Wave Ops", true);
 #endif
@@ -178,11 +158,8 @@ void VirtureTexture::Startup( void )
     m_RootSig.InitStaticSampler(0, DefaultSamplerDesc, D3D12_SHADER_VISIBILITY_PIXEL);
     m_RootSig.InitStaticSampler(1, SamplerShadowDesc, D3D12_SHADER_VISIBILITY_PIXEL);
     m_RootSig[RootParams::CameraParam].InitAsConstantBuffer(SLOT_CBUFFER_CAMERA, D3D12_SHADER_VISIBILITY_VERTEX);
-    m_RootSig[RootParams::LightingParam].InitAsConstantBuffer(SLOT_CBUFFER_LIGHT, D3D12_SHADER_VISIBILITY_PIXEL);
     m_RootSig[RootParams::MaterialsSRVs].InitAsDescriptorRange(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 0, 6, D3D12_SHADER_VISIBILITY_PIXEL);
-    m_RootSig[RootParams::LightingSRVs].InitAsDescriptorRange(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 64, 6, D3D12_SHADER_VISIBILITY_PIXEL);
-	m_RootSig[RootParams::GBufferSRVs].InitAsDescriptorRange(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 32, 4, D3D12_SHADER_VISIBILITY_PIXEL);
-    m_RootSig[RootParams::PerModelConstant].InitAsConstants(1, 2, D3D12_SHADER_VISIBILITY_VERTEX);
+    m_RootSig[RootParams::PerModelConstant].InitAsConstants(1, 2, D3D12_SHADER_VISIBILITY_PIXEL);
 	m_RootSig[RootParams::PSGameCBuffer].InitAsConstantBuffer(SLOT_CBUFFER_GAME, D3D12_SHADER_VISIBILITY_PIXEL);
 	m_RootSig[RootParams::WorldParam].InitAsConstantBuffer(SLOT_CBUFFER_WORLD, D3D12_SHADER_VISIBILITY_ALL);
     m_RootSig.Finalize(L"ModelViewer", D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT);
@@ -238,20 +215,8 @@ void VirtureTexture::Startup( void )
 	m_ForwardPlusPSO.SetPixelShader(SHADER_ARGS(g_pModelViewerPS));
     m_ForwardPlusPSO.Finalize();
 
-	m_GBufferPSO = m_ForwardPlusPSO;
-	DXGI_FORMAT gBufferFormats[] = { g_GBufferNormalBuffer.GetFormat(), g_GBufferNormalBuffer.GetFormat(), g_GBufferMaterialBuffer.GetFormat()};
-	m_GBufferPSO.SetRenderTargetFormats(3, gBufferFormats, DepthFormat);
-	m_GBufferPSO.SetPixelShader(SHADER_ARGS(g_pGBufferPS));
-	m_GBufferPSO.Finalize();
 
-	m_DefferedShadingPSO = m_ForwardPlusPSO;
-	m_DefferedShadingPSO.SetVertexShader(SHADER_ARGS(g_pScreenQuadVS));
-	m_DefferedShadingPSO.SetPixelShader(SHADER_ARGS(g_pDeferredShading));
-	m_DefferedShadingPSO.Finalize();
 
-	m_ForwardPSO = m_ForwardPlusPSO;
-	m_ForwardPSO.SetPixelShader(SHADER_ARGS(g_pForwardPS));
-	m_ForwardPSO.Finalize();
 
 #ifdef _WAVE_OP
     m_DepthWaveOpsPSO = m_DepthPSO;
@@ -265,47 +230,31 @@ void VirtureTexture::Startup( void )
 #endif
 
 	// Full color pass
-	m_ModelWireFramePSO = m_ForwardPlusPSO;
-	m_ModelWireFramePSO.SetRasterizerState(RasterizerDefaultWireFrame);
-	m_ModelWireFramePSO.SetDepthStencilState(DepthStateGreatEqual);
-	m_ModelWireFramePSO.SetPixelShader(SHADER_ARGS(g_pConstantColorPS));
-	m_ModelWireFramePSO.Finalize();
-
     m_CutoutModelPSO = m_ForwardPlusPSO;
     m_CutoutModelPSO.SetRasterizerState(RasterizerTwoSided);
     m_CutoutModelPSO.Finalize();
 
-    // A debug shader for counting lights in a tile
-    m_WaveTileCountPSO = m_ForwardPlusPSO;
-    m_WaveTileCountPSO.SetPixelShader(SHADER_ARGS(g_pWaveTileCountPS));
-    m_WaveTileCountPSO.Finalize();
+
 
   
 
-    m_ExtraTextures[0] = g_SSAOFullScreen.GetSRV();
-    m_ExtraTextures[1] = g_ShadowBuffer.GetSRV();
+
 
     TextureManager::Initialize(L"Textures/");
 	m_world.Create();
 
     // The caller of this function can override which materials are considered cutouts
     
-    CreateParticleEffects();
 
-    MotionBlur::Enable = true;
-    TemporalEffects::EnableTAA = true;
+    MotionBlur::Enable = false;
+    TemporalEffects::EnableTAA = false;
     FXAA::Enable = false;
-    PostEffects::EnableHDR = true;
-    PostEffects::EnableAdaptation = true;
-    SSAO::Enable = true;
+    PostEffects::EnableHDR = false;
+    PostEffects::EnableAdaptation = false;
+    SSAO::Enable = false;
 
     SkyPass::Initialize();
 
-	auto lighting = SceneView::World::Get()->GetLighting();
-    m_ExtraTextures[2] = lighting->GetLightBuffer().GetSRV();
-    m_ExtraTextures[3] = lighting->GetLightShadowArray().GetSRV();
-    m_ExtraTextures[4] = lighting->GetLightGrid().GetSRV();
-    m_ExtraTextures[5] = lighting->GetLightGridBitMask().GetSRV();
 
     m_tiledTexture.Create(512, 512, DXGI_FORMAT_R8G8B8A8_UNORM);
 }
@@ -381,24 +330,6 @@ __declspec(align(16))struct WorldBufferConstants
     float scene_length;
 } worldConstant;
 
-__declspec(align(16)) struct
-{
-    Vector3 sunDirection;
-    Vector3 sunLight;
-    Vector3 ambientLight;
-    float ShadowTexelSize[4];
-
-    float InvTileDim[4];
-    uint32_t TileCount[4];
-    uint32_t FirstLightIndex[4];
-    uint32_t FrameIndexMod2;
-} lightingConstants;
-
-__declspec(align(16)) struct
-{
-    Vector3 wireFrameColor;
-}psWireFrameColorConstants;
-
 
 void VirtureTexture::UpdateGpuWorld(GraphicsContext& gfxContext)
 {
@@ -414,11 +345,6 @@ void VirtureTexture::UpdateGpuWorld(GraphicsContext& gfxContext)
     XMStoreFloat4(&worldConstant.invViewport, { 1.0f / m_MainViewport.Width,1.0f / m_MainViewport.Height,0.0f,0.0f });
     worldConstant.scene_length = m_world.GetBoundingBox().Length();
     gfxContext.SetDynamicConstantBufferView(RootParams::WorldParam, sizeof(worldConstant), &worldConstant);
-
-
-
-    psWireFrameColorConstants.wireFrameColor = Vector3(0, 0, 1);
-    gfxContext.SetDynamicConstantBufferView(RootParams::PSGameCBuffer, sizeof(psWireFrameColorConstants), &psWireFrameColorConstants);
 
 }
 
@@ -458,86 +384,19 @@ void VirtureTexture::RenderObjects(GraphicsContext& gfxContext, const Matrix4& v
                 gfxContext.SetDynamicDescriptor(RootParams::MaterialsSRVs, 2, m_tiledTexture.GetSRV());
 			}
 
-			gfxContext.SetConstants(RootParams::PerModelConstant, baseVertex, m_tiledTexture.GetActiveMip());
+			gfxContext.SetConstants(RootParams::PerModelConstant, m_tiledTexture.GetMipsLevel(), m_tiledTexture.GetActiveMip(),m_tiledTexture.GetVirtualWidth(),m_tiledTexture.GetTiledWidth());
 
 			gfxContext.DrawIndexed(indexCount, startIndex, baseVertex);
 		}
 	});
 }
 
-void VirtureTexture::RenderLightShadows(GraphicsContext& gfxContext)
-{
-    ScopedTimer _prof(L"RenderLightShadows", gfxContext);
-
-    static uint32_t LightIndex = 0;
-    if (LightIndex >= SceneView::MaxLights)
-        return;
-	auto light = SceneView::World::Get()->GetLighting();
-	light->GetLightShadowTempBuffer().BeginRendering(gfxContext);
-    {
-        gfxContext.SetPipelineState(m_ShadowPSO);
-        RenderObjects(gfxContext, light->LightShadowMatrix(LightIndex), kOpaque);
-        gfxContext.SetPipelineState(m_CutoutShadowPSO);
-        RenderObjects(gfxContext, light->LightShadowMatrix(LightIndex), kCutout);
-    }
-	light->GetLightShadowTempBuffer().EndRendering(gfxContext);
-
-    gfxContext.TransitionResource(light->GetLightShadowTempBuffer(), D3D12_RESOURCE_STATE_GENERIC_READ);
-    gfxContext.TransitionResource(light->GetLightShadowArray(), D3D12_RESOURCE_STATE_COPY_DEST);
-
-    gfxContext.CopySubresource(light->GetLightShadowArray(), LightIndex, light->GetLightShadowTempBuffer(), 0);
-
-    gfxContext.TransitionResource(light->GetLightShadowArray(), D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
-
-    ++LightIndex;
-}
 
 void VirtureTexture::RenderScene( void )
 {
-    static bool s_ShowLightCounts = false;
-    if (ShowWaveTileCounts != s_ShowLightCounts)
-    {
-        static bool EnableHDR;
-        if (ShowWaveTileCounts)
-        {
-            EnableHDR = PostEffects::EnableHDR;
-            PostEffects::EnableHDR = false;
-        }
-        else
-        {
-            PostEffects::EnableHDR = EnableHDR;
-        }
-        s_ShowLightCounts = ShowWaveTileCounts;
-    }
-
+   
 	const Matrix4& camViewProjMat = m_world.GetMainCamera().GetViewProjMatrix();
-
     GraphicsContext& gfxContext = GraphicsContext::Begin(L"Scene Render");
-
-
-
-    ParticleEffects::Update(gfxContext.GetComputeContext(), Graphics::GetFrameTime());
-
-    uint32_t FrameIndex = TemporalEffects::GetFrameIndexMod2();
-
-   
-
-   
-
-	const auto lighting = SceneView::World::Get()->GetLighting();
-
-    lightingConstants.sunDirection = m_SunDirection;
-    lightingConstants.sunLight = Vector3(1.0f, 1.0f, 1.0f) * m_SunLightIntensity;
-    lightingConstants.ambientLight = Vector3(1.0f, 1.0f, 1.0f) * m_AmbientIntensity;
-    lightingConstants.ShadowTexelSize[0] = 1.0f / g_ShadowBuffer.GetWidth();
-    lightingConstants.InvTileDim[0] = 1.0f / SceneView::LightGridDim;
-    lightingConstants.InvTileDim[1] = 1.0f / SceneView::LightGridDim;
-    lightingConstants.TileCount[0] = Math::DivideByMultiple(g_SceneColorBuffer.GetWidth(), SceneView::LightGridDim);
-    lightingConstants.TileCount[1] = Math::DivideByMultiple(g_SceneColorBuffer.GetHeight(), SceneView::LightGridDim);
-    lightingConstants.FirstLightIndex[0] = lighting->GetFirstConeLight();
-    lightingConstants.FirstLightIndex[1] = lighting->GetFirstConeShadowedLight();
-    lightingConstants.FrameIndexMod2 = FrameIndex;
-
     // Set the default state for command lists
     auto pfnSetupGraphicsState = [&](void)
     {
@@ -549,13 +408,11 @@ void VirtureTexture::RenderScene( void )
 
     UpdateGpuWorld(gfxContext);
 
-    RenderLightShadows(gfxContext);
 
     {
         ScopedTimer _prof(L"Z PrePass", gfxContext);
 
-        gfxContext.SetDynamicConstantBufferView(RootParams::CameraParam, sizeof(lightingConstants), &lightingConstants);
-		
+     	
         {
             ScopedTimer _prof1(L"Opaque", gfxContext);
             gfxContext.TransitionResource(g_SceneDepthBuffer, D3D12_RESOURCE_STATE_DEPTH_WRITE, true);
@@ -618,49 +475,15 @@ void VirtureTexture::RenderScene( void )
 
             gfxContext.TransitionResource(g_SSAOFullScreen, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
 
-            gfxContext.SetDynamicDescriptors(RootParams::LightingSRVs, 0, _countof(m_ExtraTextures), m_ExtraTextures);
-            gfxContext.SetDynamicConstantBufferView(RootParams::LightingParam, sizeof(lightingConstants), &lightingConstants);
-			if (g_LightingModel == LightingType::kDeferred)
-			{
-				gfxContext.TransitionResource(g_GBufferColorBuffer, D3D12_RESOURCE_STATE_RENDER_TARGET, true);
-				gfxContext.TransitionResource(g_GBufferNormalBuffer, D3D12_RESOURCE_STATE_RENDER_TARGET, true);
-				gfxContext.TransitionResource(g_GBufferMaterialBuffer, D3D12_RESOURCE_STATE_RENDER_TARGET, true);
-				gfxContext.ClearColor(g_GBufferColorBuffer);
-				gfxContext.ClearColor(g_GBufferNormalBuffer);
-				gfxContext.ClearColor(g_GBufferMaterialBuffer);
-
-				gfxContext.SetPipelineState(m_GBufferPSO);
-				D3D12_CPU_DESCRIPTOR_HANDLE RTVs[] = { g_GBufferColorBuffer.GetRTV(),g_GBufferNormalBuffer.GetRTV(),g_GBufferMaterialBuffer.GetRTV() };
-				gfxContext.SetRenderTargets(3, RTVs, g_SceneDepthBuffer.GetDSV_DepthReadOnly());
-				gfxContext.SetViewportAndScissor(m_MainViewport, m_MainScissor);
-				RenderObjects(gfxContext, camViewProjMat, kOpaque);
-
-
-				gfxContext.TransitionResource(g_GBufferColorBuffer, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, true);
-				gfxContext.TransitionResource(g_GBufferNormalBuffer, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, true);
-				gfxContext.TransitionResource(g_GBufferMaterialBuffer, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, true);
-				gfxContext.TransitionResource(g_SceneDepthBuffer, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, true);
-				D3D12_CPU_DESCRIPTOR_HANDLE GBuffers[4] = { g_GBufferColorBuffer.GetSRV(),g_GBufferNormalBuffer.GetSRV(),g_GBufferMaterialBuffer.GetSRV(),g_SceneDepthBuffer.GetDepthSRV() };
-				gfxContext.SetDynamicDescriptors(RootParams::GBufferSRVs, 0, _countof(GBuffers), GBuffers);
-				gfxContext.TransitionResource(g_SceneColorBuffer, D3D12_RESOURCE_STATE_RENDER_TARGET, true);
-				gfxContext.ClearColor(g_SceneColorBuffer);
-				gfxContext.SetPipelineState(m_DefferedShadingPSO);
-				gfxContext.SetRenderTarget(g_SceneColorBuffer.GetRTV());
-				gfxContext.SetViewportAndScissor(m_MainViewport, m_MainScissor);
-				gfxContext.Draw(3);
-
-			}
-			else
+            
 			{
 				gfxContext.TransitionResource(g_SceneColorBuffer, D3D12_RESOURCE_STATE_RENDER_TARGET, true);
 				gfxContext.ClearColor(g_SceneColorBuffer);
 #ifdef _WAVE_OP
 				gfxContext.SetPipelineState(EnableWaveOps ? m_ModelWaveOpsPSO : m_ForwardPlusPSO);
 #else
-				if (g_LightingModel == LightingType::kForward_plus)
-					gfxContext.SetPipelineState(ShowWaveTileCounts ? m_WaveTileCountPSO : m_ForwardPlusPSO);
-				else
-					gfxContext.SetPipelineState(m_ForwardPSO);
+			    gfxContext.SetPipelineState(m_ForwardPlusPSO);
+				
 #endif
 				gfxContext.TransitionResource(g_SceneDepthBuffer, D3D12_RESOURCE_STATE_DEPTH_READ);
 				gfxContext.SetRenderTarget(g_SceneColorBuffer.GetRTV(), g_SceneDepthBuffer.GetDSV_DepthReadOnly());
@@ -668,23 +491,14 @@ void VirtureTexture::RenderScene( void )
 
 				RenderObjects(gfxContext, camViewProjMat, kOpaque);
 
-				if (!ShowWaveTileCounts)
-				{
-					gfxContext.SetPipelineState(m_CutoutModelPSO);
-					RenderObjects(gfxContext, camViewProjMat, kCutout);
-				}
-				if (ShowWireFrame)
-				{
-					gfxContext.SetPipelineState(m_ModelWireFramePSO);
-					RenderObjects(gfxContext, camViewProjMat, kOpaque);
-				}
+				
+				
 			}
 
 			
         }
 
     }
-    SkyPass::Render(gfxContext, m_world.GetMainCamera());
 
     // Some systems generate a per-pixel velocity buffer to better track dynamic and skinned meshes.  Everything
     // is static in our scene, so we generate velocity from camera motion and the depth buffer.  A velocity buffer
@@ -693,8 +507,7 @@ void VirtureTexture::RenderScene( void )
 
     TemporalEffects::ResolveImage(gfxContext);
 
-    ParticleEffects::Render(gfxContext, m_world.GetMainCamera(), g_SceneColorBuffer, g_SceneDepthBuffer,  g_LinearDepth[FrameIndex]);
-
+   
     // Until I work out how to couple these two, it's "either-or".
     if (DepthOfField::Enable)
         DepthOfField::Render(gfxContext, m_world.GetMainCamera().GetNearClip(), m_world.GetMainCamera().GetFarClip());
@@ -703,10 +516,4 @@ void VirtureTexture::RenderScene( void )
 
     gfxContext.Finish();
 }
-
-void VirtureTexture::CreateParticleEffects()
-{
-   
-}
-
 

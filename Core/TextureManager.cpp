@@ -198,10 +198,11 @@ void TiledTexture::Create(size_t Width, size_t Height, DXGI_FORMAT Format)
         nullptr,
         MY_IID_PPV_ARGS(&m_uploadBuffer)));
     UINT numTiles = 0;
-    D3D12_TILE_SHAPE tileShape = {};
+    
     UINT subresourceCount = reservedTextureDesc.MipLevels;
     std::vector<D3D12_SUBRESOURCE_TILING> tilings(subresourceCount);
-    g_Device->GetResourceTiling(m_pResource.Get(), &numTiles, &m_packedMipInfo, &tileShape, &subresourceCount, 0, &tilings[0]);
+    m_TileShape = {};
+    g_Device->GetResourceTiling(m_pResource.Get(), &numTiles, &m_packedMipInfo, &m_TileShape, &subresourceCount, 0, &tilings[0]);
     UINT heapRangeCount = m_packedMipInfo.NumStandardMips + (m_packedMipInfo.NumPackedMips > 0 ? 1 : 0);
     for (UINT n = 0; n < m_mips.size(); n++)
     {

@@ -14,11 +14,7 @@
 #include "ModelViewerRS.hlsli"
 #include "../../Core/Shaders/Buffers.hlsli"
 
-cbuffer modelInfo: register(b1)
-{
-	uint basevertex;
-	uint materialId;
-};
+
 
 struct VSInput
 {
@@ -39,7 +35,6 @@ struct VSOutput
     float3 normal : Normal;
     float3 tangent : Tangent;
     float3 bitangent : Bitangent;
-    float mipmapCount : TexCoord3;
 };
 
 [RootSignature(ModelViewer_RootSig)]
@@ -56,7 +51,6 @@ VSOutput main(VSInput vsInput)
     vsOutput.normal = vsInput.normal;
     vsOutput.tangent = vsInput.tangent;
     vsOutput.bitangent = vsInput.bitangent;
-    vsOutput.mipmapCount = (float)materialId;
 
     return vsOutput;
 }

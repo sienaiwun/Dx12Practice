@@ -28,7 +28,6 @@ namespace SceneView
 
         AddModel("Models/plane.obj");;
 		AddModel("Models/box.obj");
-
 		CaculateBoundingBox();
         ForEach([&](Model& model) {
             model.LoadTexture("smoke", 0);

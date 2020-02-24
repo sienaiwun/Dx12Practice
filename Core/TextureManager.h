@@ -97,9 +97,34 @@ public :
         }
     }
 
-    const U8 GetActiveMip()
+    inline const U8 GetActiveMip() const
     {
         return m_activeMip;
+    }
+
+    inline const U8 GetMipsLevel() const
+    {
+        return static_cast<U8>(m_mips.size());
+    }
+
+    inline const U8 GetTiledWidth() const
+    {
+        return static_cast<U8>(m_TileShape.WidthInTexels);
+    }
+
+    inline const U8 GetTiledHeight() const
+    {
+        return static_cast<U8>(m_TileShape.HeightInTexels);
+    }
+
+    inline const U8 GetVirtualWidth() const
+    {
+        return static_cast<U8>(m_resTexWidth);
+    }
+
+    inline const U8 GetVirtualHeight() const
+    {
+        return static_cast<U8>(m_resTexHeight);
     }
 
     void UpdateTileMapping(GraphicsContext& gfxContext);
@@ -134,6 +159,7 @@ private:
     Microsoft::WRL::ComPtr<ID3D12Resource> m_uploadBuffer;
     D3D12_PACKED_MIP_INFO m_packedMipInfo;
     Microsoft::WRL::ComPtr<ID3D12Heap> m_heap;
+    D3D12_TILE_SHAPE m_TileShape;
 
 };
 
