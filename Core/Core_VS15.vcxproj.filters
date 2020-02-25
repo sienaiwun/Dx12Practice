@@ -422,6 +422,9 @@
     <Filter Include="Shaders\Sky">
       <UniqueIdentifier>{06769961-5248-4cc2-b3e1-d5429801c403}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Shaders\VirtualTexture">
+      <UniqueIdentifier>{2bc9744b-6132-44ed-856f-f70953b8d28c}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="Shaders\AoBlurUpsampleBlendOutCS.hlsl">
@@ -828,6 +831,9 @@
     </FxCompile>
     <FxCompile Include="Shaders\SkyVS.hlsl">
       <Filter>Shaders\Sky</Filter>
+    </FxCompile>
+    <FxCompile Include="Shaders\FillPage.hlsl">
+      <Filter>Shaders\VirtualTexture</Filter>
     </FxCompile>
   </ItemGroup>
   <ItemGroup>

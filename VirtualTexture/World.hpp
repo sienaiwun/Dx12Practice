@@ -30,11 +30,6 @@ namespace SceneView
 
 		void Update(const float delta);
 
-		void GenerateLightBuffer(GraphicsContext& gfxContext, const Math::Camera& camera)
-		{
-			m_lighting->FillLightGrid(gfxContext, camera);
-		}
-
 		inline const BoundingBox& GetBoundingBox() const noexcept { return m_boundingbox; }
 
 		inline const Camera& GetMainCamera() const noexcept { return m_Camera; }

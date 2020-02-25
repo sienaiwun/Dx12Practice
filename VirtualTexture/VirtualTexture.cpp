@@ -59,8 +59,8 @@ enum RootParams
 {
 	CameraParam,
 	MaterialsSRVs,
+    VisibilitiUAVs,
 	PerModelConstant,
-	PSGameCBuffer,
 	WorldParam,
 	NumPassRootParams,
 };
@@ -103,16 +103,11 @@ private:
 
     RootSignature m_RootSig;
     GraphicsPSO m_DepthPSO;
-    GraphicsPSO m_CutoutDepthPSO;
     GraphicsPSO m_ForwardPlusPSO;
 #ifdef _WAVE_OP
     GraphicsPSO m_DepthWaveOpsPSO;
     GraphicsPSO m_ModelWaveOpsPSO;
 #endif
-    GraphicsPSO m_CutoutModelPSO;
-    GraphicsPSO m_ShadowPSO;
-    GraphicsPSO m_CutoutShadowPSO;
-
     D3D12_CPU_DESCRIPTOR_HANDLE m_DefaultSampler;
     D3D12_CPU_DESCRIPTOR_HANDLE m_ShadowSampler;
     D3D12_CPU_DESCRIPTOR_HANDLE m_BiasedDefaultSampler;
@@ -159,9 +154,9 @@ void VirtureTexture::Startup( void )
     m_RootSig.InitStaticSampler(1, SamplerShadowDesc, D3D12_SHADER_VISIBILITY_PIXEL);
     m_RootSig[RootParams::CameraParam].InitAsConstantBuffer(SLOT_CBUFFER_CAMERA, D3D12_SHADER_VISIBILITY_VERTEX);
     m_RootSig[RootParams::MaterialsSRVs].InitAsDescriptorRange(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 0, 6, D3D12_SHADER_VISIBILITY_PIXEL);
-    m_RootSig[RootParams::PerModelConstant].InitAsConstants(1, 2, D3D12_SHADER_VISIBILITY_PIXEL);
-	m_RootSig[RootParams::PSGameCBuffer].InitAsConstantBuffer(SLOT_CBUFFER_GAME, D3D12_SHADER_VISIBILITY_PIXEL);
-	m_RootSig[RootParams::WorldParam].InitAsConstantBuffer(SLOT_CBUFFER_WORLD, D3D12_SHADER_VISIBILITY_ALL);
+    m_RootSig[RootParams::VisibilitiUAVs].InitAsDescriptorRange(D3D12_DESCRIPTOR_RANGE_TYPE_UAV,1, 1, D3D12_SHADER_VISIBILITY_PIXEL);
+    m_RootSig[RootParams::PerModelConstant].InitAsConstants(1, 4, D3D12_SHADER_VISIBILITY_PIXEL);
+	m_RootSig[RootParams::WorldParam].InitAsConstantBuffer(SLOT_CBUFFER_WORLD, D3D12_SHADER_VISIBILITY_VERTEX);
     m_RootSig.Finalize(L"ModelViewer", D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT);
 
     DXGI_FORMAT ColorFormat = g_SceneColorBuffer.GetFormat();
@@ -188,24 +183,6 @@ void VirtureTexture::Startup( void )
     m_DepthPSO.SetVertexShader(g_pDepthViewerVS, sizeof(g_pDepthViewerVS));
     m_DepthPSO.Finalize();
 
-    // Depth-only shading but with alpha testing
-    m_CutoutDepthPSO = m_DepthPSO;
-    m_CutoutDepthPSO.SetPixelShader(g_pDepthViewerPS, sizeof(g_pDepthViewerPS));
-    m_CutoutDepthPSO.SetRasterizerState(RasterizerTwoSided);
-    m_CutoutDepthPSO.Finalize();
-
-    // Depth-only but with a depth bias and/or render only backfaces
-    m_ShadowPSO = m_DepthPSO;
-    m_ShadowPSO.SetRasterizerState(RasterizerShadow);
-    m_ShadowPSO.SetRenderTargetFormats(0, nullptr, g_ShadowBuffer.GetFormat());
-    m_ShadowPSO.Finalize();
-
-    // Shadows with alpha testing
-    m_CutoutShadowPSO = m_ShadowPSO;
-    m_CutoutShadowPSO.SetPixelShader(g_pDepthViewerPS, sizeof(g_pDepthViewerPS));
-    m_CutoutShadowPSO.SetRasterizerState(RasterizerShadowTwoSided);
-    m_CutoutShadowPSO.Finalize();
-
     // Full color pass
     m_ForwardPlusPSO = m_DepthPSO;
     m_ForwardPlusPSO.SetBlendState(BlendDisable);
@@ -229,13 +206,7 @@ void VirtureTexture::Startup( void )
     m_ModelWaveOpsPSO.Finalize();
 #endif
 
-	// Full color pass
-    m_CutoutModelPSO = m_ForwardPlusPSO;
-    m_CutoutModelPSO.SetRasterizerState(RasterizerTwoSided);
-    m_CutoutModelPSO.Finalize();
-
-
-
+	
   
 
 
@@ -352,7 +323,6 @@ void VirtureTexture::RenderObjects(GraphicsContext& gfxContext, const Matrix4& v
 {
 
 	cameraConstant.modelToProjection = viewProjMat;
-    m_tiledTexture.Update(gfxContext);
 
 	gfxContext.SetDynamicConstantBufferView(RootParams::CameraParam, sizeof(cameraConstant), &cameraConstant);
 
@@ -382,6 +352,7 @@ void VirtureTexture::RenderObjects(GraphicsContext& gfxContext, const Matrix4& v
 				materialIdx = mesh.materialIndex;
 				gfxContext.SetDynamicDescriptors(RootParams::MaterialsSRVs, 0, 6, model.GetSRVs(materialIdx));
                 gfxContext.SetDynamicDescriptor(RootParams::MaterialsSRVs, 2, m_tiledTexture.GetSRV());
+                gfxContext.SetDynamicDescriptor(RootParams::VisibilitiUAVs, 0, m_tiledTexture.GetVisibilityUAV());
 			}
 
 			gfxContext.SetConstants(RootParams::PerModelConstant, m_tiledTexture.GetMipsLevel(), m_tiledTexture.GetActiveMip(),m_tiledTexture.GetVirtualWidth(),m_tiledTexture.GetTiledWidth());
@@ -389,6 +360,8 @@ void VirtureTexture::RenderObjects(GraphicsContext& gfxContext, const Matrix4& v
 			gfxContext.DrawIndexed(indexCount, startIndex, baseVertex);
 		}
 	});
+
+
 }
 
 
@@ -428,16 +401,8 @@ void VirtureTexture::RenderScene( void )
             RenderObjects(gfxContext, camViewProjMat, kOpaque );
         }
 
-        {
-            ScopedTimer _prof2(L"Cutout", gfxContext);
-            gfxContext.SetPipelineState(m_CutoutDepthPSO);
-            RenderObjects(gfxContext, camViewProjMat, kCutout );
-        }
     }
 
-    SSAO::Render(gfxContext, m_world.GetMainCamera());
-
-	m_world.GenerateLightBuffer(gfxContext, m_world.GetMainCamera());
 
     if (!SSAO::DebugDraw)
     {
@@ -447,19 +412,7 @@ void VirtureTexture::RenderScene( void )
 
         pfnSetupGraphicsState();
 
-        {
-            ScopedTimer _prof3(L"Render Shadow Map", gfxContext);
-
-            m_SunShadow.UpdateMatrix(-m_SunDirection, Vector3(0, -500.0f, 0), Vector3(ShadowDimX, ShadowDimY, ShadowDimZ),
-                (uint32_t)g_ShadowBuffer.GetWidth(), (uint32_t)g_ShadowBuffer.GetHeight(), 16);
-
-            g_ShadowBuffer.BeginRendering(gfxContext);
-            gfxContext.SetPipelineState(m_ShadowPSO);
-            RenderObjects(gfxContext, m_SunShadow.GetViewProjMatrix(), kOpaque);
-            gfxContext.SetPipelineState(m_CutoutShadowPSO);
-            RenderObjects(gfxContext, m_SunShadow.GetViewProjMatrix(), kCutout);
-            g_ShadowBuffer.EndRendering(gfxContext);
-        }
+       
 
         if (SSAO::AsyncCompute)
         {
@@ -500,6 +453,7 @@ void VirtureTexture::RenderScene( void )
 
     }
 
+    m_tiledTexture.Update(gfxContext);
     // Some systems generate a per-pixel velocity buffer to better track dynamic and skinned meshes.  Everything
     // is static in our scene, so we generate velocity from camera motion and the depth buffer.  A velocity buffer
     // is necessary for all temporal effects (and motion blur).

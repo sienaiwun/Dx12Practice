@@ -15,7 +15,9 @@
 #pragma once
 
 #include "pch.h"
-#include "GpuResource.h"
+#include "GpuBuffer.h"
+#include "PipelineState.h"
+#include "RootSignature.h"
 #include "Utility.h"
 
 class Texture : public GpuResource
@@ -74,6 +76,14 @@ private:
 
 
 
+enum TiledComputerParams :unsigned char
+{
+    PageCountInfo,
+    Buffers,
+    NumComputeParams,
+};
+
+
 class TiledTexture : public GpuResource
 {
 public :
@@ -97,37 +107,38 @@ public :
         }
     }
 
-    inline const U8 GetActiveMip() const
+    inline const UINT GetActiveMip() const
     {
         return m_activeMip;
     }
 
-    inline const U8 GetMipsLevel() const
+    inline const UINT GetMipsLevel() const
     {
-        return static_cast<U8>(m_mips.size());
+        return static_cast<UINT>(m_mips.size());
     }
 
-    inline const U8 GetTiledWidth() const
+    inline const UINT GetTiledWidth() const
     {
-        return static_cast<U8>(m_TileShape.WidthInTexels);
+        return static_cast<UINT>(m_TileShape.WidthInTexels);
     }
 
-    inline const U8 GetTiledHeight() const
+    inline const UINT GetTiledHeight() const
     {
-        return static_cast<U8>(m_TileShape.HeightInTexels);
+        return static_cast<UINT>(m_TileShape.HeightInTexels);
     }
 
-    inline const U8 GetVirtualWidth() const
+    inline const UINT GetVirtualWidth() const
     {
-        return static_cast<U8>(m_resTexWidth);
+        return static_cast<UINT>(m_resTexWidth);
     }
 
-    inline const U8 GetVirtualHeight() const
+    inline const UINT GetVirtualHeight() const
     {
-        return static_cast<U8>(m_resTexHeight);
+        return static_cast<UINT>(m_resTexHeight);
     }
 
     void UpdateTileMapping(GraphicsContext& gfxContext);
+    void UpdateVisibilityBuffer(ComputeContext& context);
     virtual void Destroy() override
     {
         GpuResource::Destroy();
@@ -137,20 +148,37 @@ public :
 
     const D3D12_CPU_DESCRIPTOR_HANDLE& GetSRV() const { return m_hCpuDescriptorHandle; }
 
+    const D3D12_CPU_DESCRIPTOR_HANDLE& GetVisibilityUAV() const { return m_visibilityBuffer.GetUAV(); }
+
+    const D3D12_CPU_DESCRIPTOR_HANDLE& GetVisibilitySRV()  const { return m_visibilityBuffer.GetSRV(); }
+
+    const D3D12_CPU_DESCRIPTOR_HANDLE& GetPrevVisibUAV() const { return m_prevVisBuffer.GetUAV(); }
+
+    const D3D12_CPU_DESCRIPTOR_HANDLE& GetPrevVisibSRV()  const { return m_prevVisBuffer.GetSRV(); }
+
     bool operator!() { return m_hCpuDescriptorHandle.ptr == 0; }
 protected:
     D3D12_CPU_DESCRIPTOR_HANDLE m_hCpuDescriptorHandle;
 private:
     struct MipInfo
     {
-        UINT heapIndex;
+        UINT heapRangeIndex;
         bool packedMip;
         bool mapped;
         D3D12_TILED_RESOURCE_COORDINATE startCoordinate;
         D3D12_TILE_REGION_SIZE regionSize;
     };
+
+    struct PageInfo
+    {
+        D3D12_TILED_RESOURCE_COORDINATE startCoordinate;
+        D3D12_TILE_REGION_SIZE regionSize;
+        U8 mipLevel;
+        size_t heapOffset;
+    };
     std::vector<UINT8> GenerateTextureData(UINT firstMip, UINT mipCount);
     std::vector<MipInfo> m_mips;
+    std::vector<PageInfo> m_pages;
     std::vector<U32> m_heap_offsets;
     U32 m_resTexPixelInBytes;
     size_t m_resTexWidth, m_resTexHeight;
@@ -160,7 +188,13 @@ private:
     D3D12_PACKED_MIP_INFO m_packedMipInfo;
     Microsoft::WRL::ComPtr<ID3D12Heap> m_heap;
     D3D12_TILE_SHAPE m_TileShape;
-
+    StructuredBuffer m_visibilityBuffer;
+    StructuredBuffer m_prevVisBuffer;
+    StructuredBuffer m_alivePagesBuffer;
+    StructuredBuffer m_removedPagesBuffer;
+    Microsoft::WRL::ComPtr<ID3D12Heap> m_page_heaps;
+    ComputePSO m_computePSO;
+    RootSignature m_rootSig;
 };
 
 namespace TextureManager

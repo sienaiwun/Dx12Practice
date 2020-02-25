@@ -14,7 +14,6 @@
 // Thanks to Michal Drobot for his feedback.
 
 #include "ModelViewerRS.hlsli"
-#include "LightGrid.hlsli"
 
 // outdated warning about for-loop variable scope
 #pragma warning (disable: 3078)
@@ -39,6 +38,7 @@ Texture2D<float4> texTiled        : register(t2);
 Texture2D<float3> texNormal            : register(t3);
 //Texture2D<float4> texLightmap        : register(t4);
 //Texture2D<float4> texReflection    : register(t5);
+RWStructuredBuffer<uint> VisibilityBuffer : register(u1);
 cbuffer TexlInfo: register(b1)
 {
     uint maxLod;
@@ -54,13 +54,14 @@ SamplerState sampler0 : register(s0);
 [RootSignature(ModelViewer_RootSig)]
 float3 main(VSOutput vsOutput) : SV_Target0
 {
+     float4 color = float4(0.0, 0.0, 0.0, 0.0);
      float LOD = texTiled.CalculateLevelOfDetailUnclamped(sampler0, vsOutput.uv);
     LOD = clamp(LOD, 0.0f, maxLod);
     uint residencyCode = 0;
     float minLod = floor(LOD);
     minLod = clamp(minLod, 0.0f, maxLod);
     float localMinLod = minLod;
-    float4 color = float4(0.0, 0.0, 0.0, 0.0);
+   
     [loop]
     do
     {
@@ -71,7 +72,19 @@ float3 main(VSOutput vsOutput) : SV_Target0
             break;
 
     } while (!CheckAccessFullyMapped(residencyCode));
-  //  float3 color = texTiled.SampleLevel(sampler0, vsOutput.uv, LOD);
+   uint pageOffset = 0;
+
+   uint pageCount = Size / pageSize;
+   for (int i = 1; i <= int(minLod); i++)
+   {
+       pageOffset += pageCount * pageCount;
+
+       pageCount = pageCount / 2;
+   }
+
+   pageOffset += uint(float(pageCount) *  vsOutput.uv.x) + uint(float(pageCount) *  vsOutput.uv.y) * pageCount;
+   VisibilityBuffer[pageOffset] = 1;
+   //color = texTiled.SampleLevel(sampler0, vsOutput.uv, active_mip);
 
     return color.xyz;
 }

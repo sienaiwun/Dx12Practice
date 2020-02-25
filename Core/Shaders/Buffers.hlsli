@@ -32,8 +32,4 @@ CBUFFER(LightConstant, SLOT_CBUFFER_LIGHT)
 
 
 
-CBUFFER(GameConstant, SLOT_CBUFFER_GAME)
-{
-    float3 wireframe_color;
-}
 #endif

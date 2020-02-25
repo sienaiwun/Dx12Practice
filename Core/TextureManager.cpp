@@ -18,6 +18,7 @@
 #include "DDSTextureLoader.h"
 #include "GraphicsCore.h"
 #include "CommandContext.h"
+#include "CompiledShaders/FillPage.h"
 #include <map>
 #include <thread>
 
@@ -149,6 +150,8 @@ void Texture::CreatePIXImageFromMemory( const void* memBuffer, size_t fileSize )
     Create(header.Pitch, header.Width, header.Height, header.Format, (uint8_t*)memBuffer + sizeof(Header));
 }
 
+
+
 void TiledTexture::Create(size_t Width, size_t Height, DXGI_FORMAT Format)
 {
     m_resTexWidth = Width;
@@ -208,7 +211,7 @@ void TiledTexture::Create(size_t Width, size_t Height, DXGI_FORMAT Format)
     {
         if (n < m_packedMipInfo.NumStandardMips)
         {
-            m_mips[n].heapIndex = n;
+            m_mips[n].heapRangeIndex = n;
             m_mips[n].packedMip = false;
             m_mips[n].mapped = false;
             m_mips[n].startCoordinate = CD3DX12_TILED_RESOURCE_COORDINATE(0, 0, 0, n);
@@ -221,7 +224,7 @@ void TiledTexture::Create(size_t Width, size_t Height, DXGI_FORMAT Format)
         else
         {
             // All of the packed mips will go into the last heap.
-            m_mips[n].heapIndex = heapRangeCount - 1;
+            m_mips[n].heapRangeIndex = heapRangeCount - 1;
             m_mips[n].packedMip = true;
             m_mips[n].mapped = false;
 
@@ -231,6 +234,67 @@ void TiledTexture::Create(size_t Width, size_t Height, DXGI_FORMAT Format)
             m_mips[n].regionSize.UseBox = FALSE;    // regionSize.Width/Height/Depth will be ignored.
         }
     }
+
+    U32x3 imageGranularity;
+    imageGranularity[0] = m_TileShape.WidthInTexels;
+    imageGranularity[1] = m_TileShape.HeightInTexels;
+    imageGranularity[2] = m_TileShape.DepthInTexels;
+
+    m_pages.resize(0);
+    size_t heapOffset = 0;
+    for (uint32_t mipLevel = 0; mipLevel < m_packedMipInfo.NumStandardMips; mipLevel++)
+    {
+        U32x3 extent;
+        extent[0] = std::max<UINT>(m_resTexWidth>> mipLevel, 1u);
+        extent[1] = std::max<UINT>(m_resTexHeight >> mipLevel, 1u);
+        extent[2] = std::max<UINT>(1 >> mipLevel, 1u);
+
+        U32x3 sparseBindCounts = DivideByMultiple(extent, imageGranularity);
+        U32x3 lastBlockExtend;
+        lastBlockExtend[0] = extent[0] % imageGranularity[0] ? extent[0] % imageGranularity[0] : imageGranularity[0];
+        lastBlockExtend[1] = extent[1] % imageGranularity[1] ? extent[1] % imageGranularity[1] : imageGranularity[1];
+        lastBlockExtend[2] = extent[2] % imageGranularity[2] ? extent[2] % imageGranularity[2] : imageGranularity[2];
+        for (U32 y = 0; y < sparseBindCounts[1]; y++)
+        {
+            for (U32 x = 0; x < sparseBindCounts[0]; x++)
+            {
+                D3D12_TILED_RESOURCE_COORDINATE offset;
+                offset.X = x * imageGranularity[0];
+                offset.Y = y * imageGranularity[1];
+                offset.Z = imageGranularity[2];
+                offset.Subresource = mipLevel;
+                // Size of the page
+                D3D12_TILED_RESOURCE_COORDINATE extent;
+                extent.X = (x == sparseBindCounts[0] - 1) ? lastBlockExtend[0] : imageGranularity[0];
+                extent.Y = (y == sparseBindCounts[1] - 1) ? lastBlockExtend[1] : imageGranularity[1];
+                extent.Z =  lastBlockExtend[2];
+                extent.Subresource = mipLevel;
+                PageInfo page { };
+                page.regionSize.Width = imageGranularity[0];
+                page.regionSize.Height = imageGranularity[1];
+                page.regionSize.Depth = imageGranularity[2];
+                page.regionSize.NumTiles = 1;
+                page.regionSize.UseBox = TRUE;
+                page.mipLevel = mipLevel;
+                page.startCoordinate = offset;
+                heapOffset += D3D12_DEFAULT_RESOURCE_PLACEMENT_ALIGNMENT;
+                page.heapOffset = heapOffset;
+                m_pages.emplace_back(page);
+            }
+        }
+    }
+    PageInfo page{ };
+    page.regionSize.NumTiles = m_packedMipInfo.NumTilesForPackedMips;
+    page.regionSize.UseBox = false;
+    page.mipLevel = m_packedMipInfo.NumStandardMips;
+    page.startCoordinate = CD3DX12_TILED_RESOURCE_COORDINATE(0, 0, 0, m_packedMipInfo.NumStandardMips);;
+    heapOffset += D3D12_DEFAULT_RESOURCE_PLACEMENT_ALIGNMENT;
+    page.heapOffset = heapOffset;
+    m_pages.emplace_back(page);
+    m_visibilityBuffer.Create(L"visibilityBuffer", m_pages.size(), sizeof(int), nullptr);
+    m_prevVisBuffer.Create(L"preVisBuffer", m_pages.size(), sizeof(int), nullptr);
+    m_alivePagesBuffer.Create(L"aliveBuffer", m_pages.size(), sizeof(int), nullptr);
+    m_removedPagesBuffer.Create(L"removedPageBuffer", m_pages.size(), sizeof(int), nullptr);
     m_heap_offsets.resize(heapRangeCount);
     UINT heapSize = 0;
     for (UINT n = 0; n < heapRangeCount; n++)
@@ -241,11 +305,23 @@ void TiledTexture::Create(size_t Width, size_t Height, DXGI_FORMAT Format)
     }
     CD3DX12_HEAP_DESC heapDesc(heapSize, D3D12_HEAP_TYPE_DEFAULT, 0, D3D12_HEAP_FLAG_DENY_BUFFERS | D3D12_HEAP_FLAG_DENY_RT_DS_TEXTURES);
     ASSERT_SUCCEEDED(g_Device->CreateHeap(&heapDesc, IID_PPV_ARGS(&m_heap)));
+
+    CD3DX12_HEAP_DESC pageheapDesc(heapOffset, D3D12_HEAP_TYPE_DEFAULT, 0, D3D12_HEAP_FLAG_DENY_BUFFERS | D3D12_HEAP_FLAG_DENY_RT_DS_TEXTURES);
+    ASSERT_SUCCEEDED(g_Device->CreateHeap(&pageheapDesc, IID_PPV_ARGS(&m_page_heaps)))
+
+    m_rootSig.Reset(TiledComputerParams::NumComputeParams, 0);
+    m_rootSig[TiledComputerParams::PageCountInfo].InitAsConstants(0, 4, D3D12_SHADER_VISIBILITY_ALL);
+    m_rootSig[TiledComputerParams::Buffers].InitAsDescriptorRange(D3D12_DESCRIPTOR_RANGE_TYPE_UAV, 0, 6);
+    m_rootSig.Finalize(L"FillPage");
+    m_computePSO.SetRootSignature(m_rootSig);
+    m_computePSO.SetComputeShader(SHADER_ARGS(g_pFillPage));
+    m_computePSO.Finalize();
+    m_computePSO.GetPipelineStateObject()->SetName(L"Fill Page PSO");
 }
 
 void TiledTexture::UpdateTileMapping(GraphicsContext& gfxContext)
 {
-    U32 firstSubresource = m_mips[m_activeMip].heapIndex;
+    U32 firstSubresource = m_mips[m_activeMip].heapRangeIndex;
     U32 subResourceCount = m_mips[m_activeMip].packedMip ? m_packedMipInfo.NumPackedMips : 1;
     if (!m_mips[firstSubresource].mapped)
     {
@@ -316,9 +392,29 @@ void TiledTexture::UpdateTileMapping(GraphicsContext& gfxContext)
     }
     m_activeMipChanged = false;
 }
+void TiledTexture::UpdateVisibilityBuffer(ComputeContext& computeContext)
+{
+    computeContext.SetRootSignature(m_rootSig);
+    computeContext.SetPipelineState(m_computePSO);
+    computeContext.ResetCounter(m_alivePagesBuffer);
+    computeContext.ResetCounter(m_removedPagesBuffer);
+    computeContext.TransitionResource(m_visibilityBuffer, D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
+    computeContext.TransitionResource(m_prevVisBuffer, D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
+    computeContext.TransitionResource(m_alivePagesBuffer, D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
+    computeContext.TransitionResource(m_removedPagesBuffer, D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
+    computeContext.TransitionResource(m_alivePagesBuffer.GetCounterBuffer(), D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
+    computeContext.TransitionResource(m_removedPagesBuffer.GetCounterBuffer(), D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
+    D3D12_CPU_DESCRIPTOR_HANDLE handles[6] = {m_prevVisBuffer.GetUAV(),m_visibilityBuffer.GetUAV(),m_alivePagesBuffer.GetUAV(),m_alivePagesBuffer.GetCounterBuffer().GetUAV(),m_removedPagesBuffer.GetUAV(),m_removedPagesBuffer.GetCounterBuffer().GetUAV()};
+    computeContext.SetDynamicDescriptors(TiledComputerParams::Buffers, 0, 6 ,handles);
+    computeContext.SetConstants(TiledComputerParams::PageCountInfo, (UINT)m_pages.size(), 0, 0, 0);
+ 
+    computeContext.Dispatch3D(m_pages.size(), 1, 1, 1024, 1, 1);
+}
 
 void TiledTexture::Update(GraphicsContext& gfxContext)
 {
+    ScopedTimer _prof4(L"Pages Update", gfxContext);
+    UpdateVisibilityBuffer(gfxContext.GetComputeContext());
     if (m_activeMipChanged)
     {
         gfxContext.GetCommandList()->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(m_pResource.Get(), D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_COPY_DEST));

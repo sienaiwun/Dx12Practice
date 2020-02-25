@@ -93,3 +93,13 @@ using U32x3 = Array<U32, 3>;
 using F32 = float;
 using F32x2 = Array<F32, 2>;
 using F32x3 = Array<F32, 3>;
+
+template <typename T, size_t N > Array<T, N> DivideByMultiple(Array <T, N> value, Array <T, N> alignment)
+{
+    Array <T, N> result;
+    for (size_t i = 0; i < N; i++)
+    {
+        result[i] = (T)((value[i] + alignment[i] - 1) / alignment[i]);
+    }
+    return result;
+}

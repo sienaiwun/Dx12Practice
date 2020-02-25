@@ -21,7 +21,6 @@ cbuffer name : register(CONCAT_B(slot))
 #define SLOT_CBUFFER_LIGHT          1
 #define SLOT_CBUFFER_WORLD          2
 #define SLOT_CBUFFER_SHADOW_LIGHT   3
-#define SLOT_CBUFFER_GAME           4
 
 #define SAMPLER_TEXTURE             0
 #define SAMPLER_SHADOWMAP           1
