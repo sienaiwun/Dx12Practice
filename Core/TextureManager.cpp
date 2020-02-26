@@ -295,6 +295,12 @@ void TiledTexture::Create(size_t Width, size_t Height, DXGI_FORMAT Format)
     m_prevVisBuffer.Create(L"preVisBuffer", m_pages.size(), sizeof(int), nullptr);
     m_alivePagesBuffer.Create(L"aliveBuffer", m_pages.size(), sizeof(int), nullptr);
     m_removedPagesBuffer.Create(L"removedPageBuffer", m_pages.size(), sizeof(int), nullptr);
+    m_alivePagesReadBackBuffer.Create(L"alivePagesReadBackBuffer", m_pages.size(), sizeof(int));
+    m_removedPagesReadBackBuffer.Create(L"removedPagesBuffer", m_pages.size(), sizeof(int));
+    m_alivePagesCounterReadBackBuffer.Create(L"alivePagesCounterReadBackBuffer", 1, sizeof(int));
+    m_removedPagesCounterReadBackBuffer.Create(L"removedPagesCounterReadBackBuffer", 1, sizeof(int));
+    m_alivePagesCounterBuffer.Create(L"alivePageBufferCounter", 1, sizeof(int));
+    m_removedPagesCounterBuffer.Create(L"removedPageBufferCounter", 1, sizeof(int));
     m_heap_offsets.resize(heapRangeCount);
     UINT heapSize = 0;
     for (UINT n = 0; n < heapRangeCount; n++)
@@ -394,21 +400,56 @@ void TiledTexture::UpdateTileMapping(GraphicsContext& gfxContext)
 }
 void TiledTexture::UpdateVisibilityBuffer(ComputeContext& computeContext)
 {
+    //ComputeContext& computeContext = ComputeContext::Begin(L"Bitonic Sort Test");
     computeContext.SetRootSignature(m_rootSig);
     computeContext.SetPipelineState(m_computePSO);
-    computeContext.ResetCounter(m_alivePagesBuffer);
-    computeContext.ResetCounter(m_removedPagesBuffer);
+    computeContext.FillBuffer(m_alivePagesCounterBuffer, 0, 0, sizeof(uint32_t));
+    computeContext.FillBuffer(m_removedPagesCounterBuffer, 0, 0, sizeof(uint32_t));
     computeContext.TransitionResource(m_visibilityBuffer, D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
     computeContext.TransitionResource(m_prevVisBuffer, D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
     computeContext.TransitionResource(m_alivePagesBuffer, D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
     computeContext.TransitionResource(m_removedPagesBuffer, D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
-    computeContext.TransitionResource(m_alivePagesBuffer.GetCounterBuffer(), D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
-    computeContext.TransitionResource(m_removedPagesBuffer.GetCounterBuffer(), D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
-    D3D12_CPU_DESCRIPTOR_HANDLE handles[6] = {m_prevVisBuffer.GetUAV(),m_visibilityBuffer.GetUAV(),m_alivePagesBuffer.GetUAV(),m_alivePagesBuffer.GetCounterBuffer().GetUAV(),m_removedPagesBuffer.GetUAV(),m_removedPagesBuffer.GetCounterBuffer().GetUAV()};
+    computeContext.TransitionResource(m_alivePagesCounterBuffer, D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
+    computeContext.TransitionResource(m_removedPagesCounterBuffer, D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
+    D3D12_CPU_DESCRIPTOR_HANDLE handles[6] = {m_prevVisBuffer.GetUAV(),m_visibilityBuffer.GetUAV(),m_alivePagesBuffer.GetUAV(),m_alivePagesCounterBuffer.GetUAV(),m_removedPagesBuffer.GetUAV(),m_removedPagesCounterBuffer.GetUAV()};
     computeContext.SetDynamicDescriptors(TiledComputerParams::Buffers, 0, 6 ,handles);
     computeContext.SetConstants(TiledComputerParams::PageCountInfo, (UINT)m_pages.size(), 0, 0, 0);
- 
     computeContext.Dispatch3D(m_pages.size(), 1, 1, 1024, 1, 1);
+
+    computeContext.CopyBuffer(m_alivePagesCounterReadBackBuffer,m_alivePagesCounterBuffer );
+    computeContext.CopyBuffer(m_removedPagesCounterReadBackBuffer, m_removedPagesCounterBuffer);
+    computeContext.CopyBuffer(m_alivePagesReadBackBuffer, m_alivePagesBuffer);
+    computeContext.CopyBuffer(m_removedPagesReadBackBuffer, m_removedPagesBuffer);
+}
+
+void TiledTexture::FeedBack()
+{
+    AddPages();
+    RemovePages();
+}
+
+void TiledTexture::AddPages()
+{
+    int active_page_count = *static_cast<int*>(m_alivePagesCounterReadBackBuffer.Map());
+    m_alivePagesCounterReadBackBuffer.Unmap();
+    if (active_page_count == 0)
+        return;
+    std::vector<uint32_t> active_pages;
+    active_pages.resize(active_page_count);
+    memcpy(active_pages.data(), m_alivePagesReadBackBuffer.Map(), active_page_count * sizeof(int));
+    m_alivePagesReadBackBuffer.Unmap();
+}
+
+void TiledTexture::RemovePages()
+{
+    int removed_page_count = *static_cast<int*>(m_removedPagesCounterReadBackBuffer.Map());
+    m_removedPagesCounterReadBackBuffer.Unmap();
+    if (removed_page_count == 0)
+        return;
+    std::vector<uint32_t> removed_pages;
+    removed_pages.resize(removed_page_count);
+    memcpy(removed_pages.data(), m_removedPagesReadBackBuffer.Map(), removed_page_count * sizeof(int));
+    m_removedPagesReadBackBuffer.Unmap();
 }
 
 void TiledTexture::Update(GraphicsContext& gfxContext)

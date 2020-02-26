@@ -16,6 +16,7 @@
 
 #include "pch.h"
 #include "GpuBuffer.h"
+#include "ReadbackBuffer.h"
 #include "PipelineState.h"
 #include "RootSignature.h"
 #include "Utility.h"
@@ -89,6 +90,7 @@ class TiledTexture : public GpuResource
 public :
     void Create(size_t Width, size_t Height, DXGI_FORMAT Format);
     void Update(GraphicsContext& gfxContext);
+    void FeedBack();
     void LevelUp()
     {
         if (m_activeMip < 10)
@@ -157,9 +159,12 @@ public :
     const D3D12_CPU_DESCRIPTOR_HANDLE& GetPrevVisibSRV()  const { return m_prevVisBuffer.GetSRV(); }
 
     bool operator!() { return m_hCpuDescriptorHandle.ptr == 0; }
+
 protected:
-    D3D12_CPU_DESCRIPTOR_HANDLE m_hCpuDescriptorHandle;
+    void RemovePages();
+    void AddPages();
 private:
+
     struct MipInfo
     {
         UINT heapRangeIndex;
@@ -188,10 +193,17 @@ private:
     D3D12_PACKED_MIP_INFO m_packedMipInfo;
     Microsoft::WRL::ComPtr<ID3D12Heap> m_heap;
     D3D12_TILE_SHAPE m_TileShape;
+    D3D12_CPU_DESCRIPTOR_HANDLE m_hCpuDescriptorHandle;
     StructuredBuffer m_visibilityBuffer;
     StructuredBuffer m_prevVisBuffer;
     StructuredBuffer m_alivePagesBuffer;
-    StructuredBuffer m_removedPagesBuffer;
+    StructuredBuffer m_removedPagesBuffer; 
+    ByteAddressBuffer m_alivePagesCounterBuffer;
+    ByteAddressBuffer m_removedPagesCounterBuffer;
+    ReadbackBuffer m_alivePagesReadBackBuffer;
+    ReadbackBuffer m_removedPagesReadBackBuffer;
+    ReadbackBuffer m_alivePagesCounterReadBackBuffer;
+    ReadbackBuffer m_removedPagesCounterReadBackBuffer;
     Microsoft::WRL::ComPtr<ID3D12Heap> m_page_heaps;
     ComputePSO m_computePSO;
     RootSignature m_rootSig;

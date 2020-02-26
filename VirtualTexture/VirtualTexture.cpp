@@ -469,5 +469,6 @@ void VirtureTexture::RenderScene( void )
         MotionBlur::RenderObjectBlur(gfxContext, g_VelocityBuffer);
 
     gfxContext.Finish();
+    m_tiledTexture.FeedBack();
 }
 
