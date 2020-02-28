@@ -24,6 +24,7 @@
 
 using namespace std;
 using namespace Graphics;
+static bool once = true;
 
 static UINT BytesPerPixel( DXGI_FORMAT Format )
 {
@@ -150,10 +151,24 @@ void Texture::CreatePIXImageFromMemory( const void* memBuffer, size_t fileSize )
     Create(header.Pitch, header.Width, header.Height, header.Format, (uint8_t*)memBuffer + sizeof(Header));
 }
 
+PageInfo::PageInfo(const PageInfo & page) :start_corordinate(page.start_corordinate), regionSize(page.regionSize), 
+mipLevel(page.mipLevel), m_mem(page.m_mem?std::make_unique<DynAlloc>(*page.m_mem):nullptr)
+{}
 
+void PageInfo::LoadData(std::vector<UINT8> data)
+{
+    CommandContext& InitContext = CommandContext::Begin();
+    const size_t NumBytes = data.size() * sizeof(UINT8);
+    m_mem = std::make_unique<DynAlloc>(InitContext.ReserveUploadMemory(NumBytes));
+    m_mem->Buffer->SetName(L"Page upload buffer");
+    SIMDMemCopy(m_mem->DataPtr, data.data(), Math::DivideByMultiple(NumBytes, 16));
+    InitContext.Finish(true);
+}
 
 void TiledTexture::Create(size_t Width, size_t Height, DXGI_FORMAT Format)
 {
+    Destroy();
+
     m_resTexWidth = Width;
     m_resTexHeight = Height;
     m_activeMipChanged = true;
@@ -164,7 +179,7 @@ void TiledTexture::Create(size_t Width, size_t Height, DXGI_FORMAT Format)
     {
         mipLevels++;
     }
-    m_activeMip = static_cast<U8>(mipLevels - 1);    // Show the least detailed mip first.
+  //  m_activeMip = static_cast<U8>(mipLevels - 1);    // Show the least detailed mip first.
     m_mips.resize(mipLevels);
     D3D12_RESOURCE_DESC reservedTextureDesc{};
     reservedTextureDesc.MipLevels = static_cast<UINT16>(m_mips.size());
@@ -177,12 +192,14 @@ void TiledTexture::Create(size_t Width, size_t Height, DXGI_FORMAT Format)
     reservedTextureDesc.SampleDesc.Quality = 0;
     reservedTextureDesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
     reservedTextureDesc.Layout = D3D12_TEXTURE_LAYOUT_64KB_UNDEFINED_SWIZZLE;
+    m_UsageState = D3D12_RESOURCE_STATE_COPY_DEST;
     ASSERT_SUCCEEDED(g_Device->CreateReservedResource(
         &reservedTextureDesc,
-        D3D12_RESOURCE_STATE_COPY_DEST,
+        m_UsageState,
         nullptr,
         MY_IID_PPV_ARGS(m_pResource.ReleaseAndGetAddressOf())));
-
+    m_pResource->SetName(L"Tiled Resource");
+    m_GpuVirtualAddress = m_pResource->GetGPUVirtualAddress();
     D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
     srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
     srvDesc.Format = reservedTextureDesc.Format;
@@ -258,11 +275,11 @@ void TiledTexture::Create(size_t Width, size_t Height, DXGI_FORMAT Format)
         {
             for (U32 x = 0; x < sparseBindCounts[0]; x++)
             {
-                D3D12_TILED_RESOURCE_COORDINATE offset;
-                offset.X = x * imageGranularity[0];
-                offset.Y = y * imageGranularity[1];
-                offset.Z = imageGranularity[2];
-                offset.Subresource = mipLevel;
+                D3D12_TILED_RESOURCE_COORDINATE start_coordinate;
+                start_coordinate.X = x ;
+                start_coordinate.Y = y ;
+                start_coordinate.Z = 0;
+                start_coordinate.Subresource = mipLevel;
                 // Size of the page
                 D3D12_TILED_RESOURCE_COORDINATE extent;
                 extent.X = (x == sparseBindCounts[0] - 1) ? lastBlockExtend[0] : imageGranularity[0];
@@ -270,16 +287,16 @@ void TiledTexture::Create(size_t Width, size_t Height, DXGI_FORMAT Format)
                 extent.Z =  lastBlockExtend[2];
                 extent.Subresource = mipLevel;
                 PageInfo page { };
-                page.regionSize.Width = imageGranularity[0];
-                page.regionSize.Height = imageGranularity[1];
-                page.regionSize.Depth = imageGranularity[2];
+                page.regionSize.Width = 1;
+                page.regionSize.Height = 1;
+                page.regionSize.Depth = 1;
                 page.regionSize.NumTiles = 1;
                 page.regionSize.UseBox = TRUE;
                 page.mipLevel = mipLevel;
-                page.startCoordinate = offset;
+                page.start_corordinate = start_coordinate;
                 heapOffset += D3D12_DEFAULT_RESOURCE_PLACEMENT_ALIGNMENT;
                 page.heapOffset = heapOffset;
-                m_pages.emplace_back(page);
+                m_pages.emplace_back(std::move(page));
             }
         }
     }
@@ -287,10 +304,10 @@ void TiledTexture::Create(size_t Width, size_t Height, DXGI_FORMAT Format)
     page.regionSize.NumTiles = m_packedMipInfo.NumTilesForPackedMips;
     page.regionSize.UseBox = false;
     page.mipLevel = m_packedMipInfo.NumStandardMips;
-    page.startCoordinate = CD3DX12_TILED_RESOURCE_COORDINATE(0, 0, 0, m_packedMipInfo.NumStandardMips);;
+    page.start_corordinate = CD3DX12_TILED_RESOURCE_COORDINATE(0, 0, 0, m_packedMipInfo.NumStandardMips);;
     heapOffset += D3D12_DEFAULT_RESOURCE_PLACEMENT_ALIGNMENT;
     page.heapOffset = heapOffset;
-    m_pages.emplace_back(page);
+    m_pages.emplace_back(std::move(page));
     m_visibilityBuffer.Create(L"visibilityBuffer", m_pages.size(), sizeof(int), nullptr);
     m_prevVisBuffer.Create(L"preVisBuffer", m_pages.size(), sizeof(int), nullptr);
     m_alivePagesBuffer.Create(L"aliveBuffer", m_pages.size(), sizeof(int), nullptr);
@@ -400,7 +417,6 @@ void TiledTexture::UpdateTileMapping(GraphicsContext& gfxContext)
 }
 void TiledTexture::UpdateVisibilityBuffer(ComputeContext& computeContext)
 {
-    //ComputeContext& computeContext = ComputeContext::Begin(L"Bitonic Sort Test");
     computeContext.SetRootSignature(m_rootSig);
     computeContext.SetPipelineState(m_computePSO);
     computeContext.FillBuffer(m_alivePagesCounterBuffer, 0, 0, sizeof(uint32_t));
@@ -422,25 +438,77 @@ void TiledTexture::UpdateVisibilityBuffer(ComputeContext& computeContext)
     computeContext.CopyBuffer(m_removedPagesReadBackBuffer, m_removedPagesBuffer);
 }
 
-void TiledTexture::FeedBack()
-{
-    AddPages();
-    RemovePages();
-}
 
-void TiledTexture::AddPages()
+void TiledTexture::AddPages(GraphicsContext& gContext)
 {
     int active_page_count = *static_cast<int*>(m_alivePagesCounterReadBackBuffer.Map());
     m_alivePagesCounterReadBackBuffer.Unmap();
     if (active_page_count == 0)
         return;
-    std::vector<uint32_t> active_pages;
+    std::vector<U32> active_pages;
     active_pages.resize(active_page_count);
     memcpy(active_pages.data(), m_alivePagesReadBackBuffer.Map(), active_page_count * sizeof(int));
     m_alivePagesReadBackBuffer.Unmap();
+    std::vector<D3D12_TILED_RESOURCE_COORDINATE> startCoordinates;
+    std::vector<D3D12_TILE_REGION_SIZE> regionSizes;
+    std::vector<UINT> heapRangeStartOffsets;
+    std::vector<D3D12_TILE_RANGE_FLAGS> rangeFlags;
+    std::vector<UINT> rangeTileCounts;
+   
+   // for each (U32 i in active_pages)
+
+    const UINT tile_width = m_TileShape.WidthInTexels;
+    const UINT tile_height = m_TileShape.HeightInTexels;
+    for(int i =0;i<m_pages.size();i++)
+    {
+        PageInfo& page = m_pages[i];
+        if ( (page.mipLevel >= 3))
+            continue;
+        const UINT width = m_resTexWidth >> page.mipLevel;
+        const UINT height = m_resTexHeight >> page.mipLevel;
+        std::vector<UINT8> data = GenerateTextureData(page.start_corordinate.X * tile_width, page.start_corordinate.Y * tile_height, tile_width, tile_height, page.mipLevel);
+        page.LoadData(std::move(data));
+        startCoordinates.push_back(page.start_corordinate);
+        regionSizes.push_back(page.regionSize);
+        heapRangeStartOffsets.push_back(i);
+        rangeTileCounts.push_back(1);
+        rangeFlags.push_back(D3D12_TILE_RANGE_FLAG_NONE);
+
+        D3D12_RESOURCE_DESC         Desc = m_pResource->GetDesc();
+        D3D12_TEXTURE_COPY_LOCATION Dst = {};
+        Dst.Type = D3D12_TEXTURE_COPY_TYPE_SUBRESOURCE_INDEX;
+        Dst.pResource = m_pResource.Get();
+        Dst.SubresourceIndex = page.start_corordinate.Subresource;
+
+        D3D12_TEXTURE_COPY_LOCATION Src = {};
+        Src.Type = D3D12_TEXTURE_COPY_TYPE_PLACED_FOOTPRINT;
+        Src.pResource = page.m_mem->Buffer.GetResource();
+        Src.PlacedFootprint =
+            D3D12_PLACED_SUBRESOURCE_FOOTPRINT{ 0,
+                                { Desc.Format,
+                                    tile_width, tile_height, 1, tile_width * sizeof(uint32_t) } };//BitsPerPixels
+
+       
+        gContext.GetCommandList()->CopyTextureRegion(&Dst, page.start_corordinate.X * tile_width, page.start_corordinate.Y * tile_height, 0, &Src, NULL);
+    }
+    if(regionSizes.size())
+    {
+        Graphics::g_CommandManager.GetCommandQueue()->UpdateTileMappings(
+            m_pResource.Get(),
+            startCoordinates.size(),
+            startCoordinates.data(),
+            regionSizes.data(),
+            m_heap.Get(),
+            regionSizes.size(),
+            rangeFlags.data(),
+            heapRangeStartOffsets.data(),
+            rangeTileCounts.data(),
+            D3D12_TILE_MAPPING_FLAG_NONE);
+    }
+
 }
 
-void TiledTexture::RemovePages()
+void TiledTexture::RemovePages(GraphicsContext& gContext)
 {
     int removed_page_count = *static_cast<int*>(m_removedPagesCounterReadBackBuffer.Map());
     m_removedPagesCounterReadBackBuffer.Unmap();
@@ -456,12 +524,52 @@ void TiledTexture::Update(GraphicsContext& gfxContext)
 {
     ScopedTimer _prof4(L"Pages Update", gfxContext);
     UpdateVisibilityBuffer(gfxContext.GetComputeContext());
-    if (m_activeMipChanged)
     {
-        gfxContext.GetCommandList()->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(m_pResource.Get(), D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_COPY_DEST));
-        UpdateTileMapping(gfxContext);
-        gfxContext.GetCommandList()->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(m_pResource.Get(), D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE));
+       
     }
+    {
+        gfxContext.TransitionResource(*this, D3D12_RESOURCE_STATE_COPY_DEST, true);
+        AddPages(gfxContext);
+        gfxContext.TransitionResource(*this, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
+    }
+}
+
+std::vector<UINT8> TiledTexture::GenerateTextureData(UINT offsetX, UINT offsetY, UINT W, UINT H, UINT currentMip)
+{
+    
+    UINT dataSize = W*H* m_resTexPixelInBytes;
+    std::vector<UINT8> data(dataSize);
+    UINT8* pData = &data[0];
+    const UINT pitch = m_resTexWidth >> currentMip;
+    const UINT heightpitch = m_resTexHeight >> currentMip;
+    const UINT cellPitch = std::max<UINT>(pitch >> 3, 1);    // The width of a cell in the checkboard texture.
+    const UINT cellHeight = std::max<UINT>(heightpitch >> 3, 1);
+    INT index = 0;
+    for (UINT y = offsetY; y < std::min(heightpitch, offsetY + H); y++)
+    {
+        for (UINT x = offsetX; x < std::min(pitch, offsetX + W); x++)
+        {
+            UINT i = x / cellPitch;
+            UINT j = y / cellHeight;
+            if (index > dataSize)
+                break;;
+            if (i % 2 == j % 2)
+            {
+                pData[index++] = 0xff;    // R
+                pData[index++] = 0x00;    // G
+                pData[index++] = 0x00;    // B
+                pData[index++] = 0xff;    // A
+            }
+            else
+            {
+                pData[index++] = 0xff;    // R
+                pData[index++] = 0xff;    // G
+                pData[index++] = 0xff;    // B
+                pData[index++] = 0xff;    // A
+            }
+        }
+    }
+    return data;
 }
 
 std::vector<UINT8> TiledTexture::GenerateTextureData(UINT firstMip, UINT mipCount)

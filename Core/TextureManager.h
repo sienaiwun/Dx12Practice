@@ -17,6 +17,7 @@
 #include "pch.h"
 #include "GpuBuffer.h"
 #include "ReadbackBuffer.h"
+#include "LinearAllocator.h"
 #include "PipelineState.h"
 #include "RootSignature.h"
 #include "Utility.h"
@@ -84,13 +85,24 @@ enum TiledComputerParams :unsigned char
     NumComputeParams,
 };
 
+struct PageInfo
+{
+    D3D12_TILED_RESOURCE_COORDINATE start_corordinate;
+    D3D12_TILE_REGION_SIZE regionSize;
+    U8 mipLevel;
+    size_t heapOffset = 0;
+    std::unique_ptr<DynAlloc> m_mem;
+    PageInfo() :m_mem(nullptr) {    }
+    PageInfo(const PageInfo &);
+    ~PageInfo() = default;
+    void LoadData(std::vector<UINT8> data);
+};
 
 class TiledTexture : public GpuResource
 {
 public :
     void Create(size_t Width, size_t Height, DXGI_FORMAT Format);
     void Update(GraphicsContext& gfxContext);
-    void FeedBack();
     void LevelUp()
     {
         if (m_activeMip < 10)
@@ -161,8 +173,8 @@ public :
     bool operator!() { return m_hCpuDescriptorHandle.ptr == 0; }
 
 protected:
-    void RemovePages();
-    void AddPages();
+    void RemovePages(GraphicsContext& gContext);
+    void AddPages(GraphicsContext& gContext);
 private:
 
     struct MipInfo
@@ -173,14 +185,8 @@ private:
         D3D12_TILED_RESOURCE_COORDINATE startCoordinate;
         D3D12_TILE_REGION_SIZE regionSize;
     };
-
-    struct PageInfo
-    {
-        D3D12_TILED_RESOURCE_COORDINATE startCoordinate;
-        D3D12_TILE_REGION_SIZE regionSize;
-        U8 mipLevel;
-        size_t heapOffset;
-    };
+   
+    std::vector<UINT8> GenerateTextureData(UINT offsetX, UINT offsetY, UINT width, UINT height, UINT mip_level);
     std::vector<UINT8> GenerateTextureData(UINT firstMip, UINT mipCount);
     std::vector<MipInfo> m_mips;
     std::vector<PageInfo> m_pages;
