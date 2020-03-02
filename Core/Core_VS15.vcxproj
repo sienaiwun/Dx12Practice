@@ -126,6 +126,7 @@
     <ClInclude Include="Math\Transform.h" />
     <ClInclude Include="Math\Vector.h" />
     <ClInclude Include="MotionBlur.h" />
+    <ClInclude Include="PageInfo.h" />
     <ClInclude Include="ParticleEffect.h" />
     <ClInclude Include="ParticleEffectManager.h" />
     <ClInclude Include="ParticleEffectProperties.h" />
@@ -184,6 +185,7 @@
     <ClCompile Include="Math\Frustum.cpp" />
     <ClCompile Include="Math\Random.cpp" />
     <ClCompile Include="MotionBlur.cpp" />
+    <ClCompile Include="PageInfo.cpp" />
     <ClCompile Include="ParticleEffect.cpp" />
     <ClCompile Include="ParticleEffectManager.cpp" />
     <ClCompile Include="ParticleEmissionProperties.cpp" />
