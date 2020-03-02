@@ -147,7 +147,7 @@ void VirtureTexture::Startup( void )
 {
 	freopen("stdout.txt","w+",stdout);
     SamplerDesc DefaultSamplerDesc;
-    DefaultSamplerDesc.MaxAnisotropy = 8;
+    DefaultSamplerDesc.MaxAnisotropy = 0;
 
     m_RootSig.Reset(RootParams::NumPassRootParams, 2);
     m_RootSig.InitStaticSampler(0, DefaultSamplerDesc, D3D12_SHADER_VISIBILITY_PIXEL);
@@ -323,7 +323,7 @@ void VirtureTexture::RenderObjects(GraphicsContext& gfxContext, const Matrix4& v
 {
 
 	cameraConstant.modelToProjection = viewProjMat;
-
+    gfxContext.TransitionResource(m_tiledTexture, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, true);
 	gfxContext.SetDynamicConstantBufferView(RootParams::CameraParam, sizeof(cameraConstant), &cameraConstant);
 
 	uint32_t materialIdx = 0xFFFFFFFFul;
@@ -469,6 +469,5 @@ void VirtureTexture::RenderScene( void )
         MotionBlur::RenderObjectBlur(gfxContext, g_VelocityBuffer);
 
     gfxContext.Finish();
-    m_tiledTexture.FeedBack();
 }
 

@@ -91,7 +91,8 @@ struct PageInfo
     D3D12_TILE_REGION_SIZE regionSize;
     U8 mipLevel;
     size_t heapOffset = 0;
-    std::unique_ptr<DynAlloc> m_mem;
+    std::unique_ptr<DynAlloc> m_mem = nullptr;
+    bool is_packed = false;
     PageInfo() :m_mem(nullptr) {    }
     PageInfo(const PageInfo &);
     ~PageInfo() = default;
