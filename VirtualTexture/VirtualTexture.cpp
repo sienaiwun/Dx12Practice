@@ -34,6 +34,7 @@
 #include "ShadowCamera.h"
 #include "ParticleEffectManager.h"
 #include "GameInput.h"
+#include "TiledTexture.h"
 
 // To enable wave intrinsics, uncomment this macro and #define DXIL in Core/GraphcisCore.cpp.
 // Run CompileSM6Test.bat to compile the relevant shaders with DXC.

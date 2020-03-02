@@ -211,6 +211,9 @@
     <ClInclude Include="hlsl.hpp">
       <Filter>Shaders</Filter>
     </ClInclude>
+    <ClInclude Include="TiledTexture.h">
+      <Filter>Source Files\Graphics</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="SystemTime.cpp">
@@ -364,6 +367,9 @@
       <Filter>Source Files\Graphics</Filter>
     </ClCompile>
     <ClCompile Include="SkyPass.cpp">
+      <Filter>Source Files\Graphics</Filter>
+    </ClCompile>
+    <ClCompile Include="TiledTexture.cpp">
       <Filter>Source Files\Graphics</Filter>
     </ClCompile>
   </ItemGroup>
