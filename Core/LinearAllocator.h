@@ -158,3 +158,34 @@ private:
     std::vector<LinearAllocationPage*> m_RetiredPages;
     std::vector<LinearAllocationPage*> m_LargePageList;
 };
+
+struct PageAlloc
+{
+    PageAlloc(GpuResource BaseResource, size_t ThisOffset, size_t ThisSize)
+        : Buffer(BaseResource), Offset(ThisOffset), Size(ThisSize) {}
+
+    GpuResource Buffer;    // The D3D buffer associated with this memory.
+    size_t Offset;            // Offset from start of buffer resource
+    size_t Size;            // Reserved size of this allocation
+    void* DataPtr;            // The CPU-writeable address
+    D3D12_GPU_VIRTUAL_ADDRESS GpuAddress;    // The GPU-visible address
+    ~PageAlloc()
+    {
+        if (DataPtr != nullptr)
+        {
+            Buffer.GetResource()->Unmap(0, nullptr);
+            DataPtr = nullptr;
+        }
+        Buffer.Destroy();
+    }
+};
+class CPULinearAllocator
+{
+public:
+    CPULinearAllocator(const size_t page_size) : m_AllocationType(kCpuWritable),m_PageSize(page_size)
+    {   }
+    PageAlloc Allocate(size_t SizeInBytes, size_t Alignment = DEFAULT_ALIGN);
+private:
+    const size_t m_PageSize;
+    const LinearAllocatorType m_AllocationType;
+};

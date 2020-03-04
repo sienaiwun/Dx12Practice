@@ -191,3 +191,54 @@ DynAlloc LinearAllocator::Allocate(size_t SizeInBytes, size_t Alignment)
 
     return ret;
 }
+
+
+PageAlloc CPULinearAllocator::Allocate(size_t SizeInBytes, size_t Alignment )
+{
+    // almost the same as  LinearAllocator::Allocate
+    const size_t AlignmentMask = Alignment - 1;
+
+    // Assert that it's a power of two.
+    ASSERT((AlignmentMask & Alignment) == 0);
+
+    // Align the allocation
+    const size_t AlignedSize = Math::AlignUpWithMask(SizeInBytes, AlignmentMask);
+
+    D3D12_HEAP_PROPERTIES HeapProps;
+    HeapProps.CPUPageProperty = D3D12_CPU_PAGE_PROPERTY_UNKNOWN;
+    HeapProps.MemoryPoolPreference = D3D12_MEMORY_POOL_UNKNOWN;
+    HeapProps.CreationNodeMask = 1;
+    HeapProps.VisibleNodeMask = 1;
+
+    D3D12_RESOURCE_DESC ResourceDesc;
+    ResourceDesc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
+    ResourceDesc.Alignment = 0;
+    ResourceDesc.Height = 1;
+    ResourceDesc.DepthOrArraySize = 1;
+    ResourceDesc.MipLevels = 1;
+    ResourceDesc.Format = DXGI_FORMAT_UNKNOWN;
+    ResourceDesc.SampleDesc.Count = 1;
+    ResourceDesc.SampleDesc.Quality = 0;
+    ResourceDesc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
+
+    D3D12_RESOURCE_STATES DefaultUsage;
+
+    ASSERT(m_AllocationType == kCpuWritable);
+    HeapProps.Type = D3D12_HEAP_TYPE_UPLOAD;
+    ResourceDesc.Width = AlignedSize;
+    ResourceDesc.Flags = D3D12_RESOURCE_FLAG_NONE;
+    DefaultUsage = D3D12_RESOURCE_STATE_GENERIC_READ;
+    ID3D12Resource* pBuffer;
+    ASSERT_SUCCEEDED(g_Device->CreateCommittedResource(&HeapProps, D3D12_HEAP_FLAG_NONE,
+        &ResourceDesc, DefaultUsage, nullptr, MY_IID_PPV_ARGS(&pBuffer)));
+
+    pBuffer->SetName(L"Tiled Page");
+
+    PageAlloc ret(GpuResource(pBuffer, D3D12_RESOURCE_STATE_COMMON), 0, SizeInBytes);
+    D3D12_GPU_VIRTUAL_ADDRESS GpuVirtualAddress = pBuffer->GetGPUVirtualAddress();
+    void* CpuVirtualAddress;
+    pBuffer->Map(0, nullptr, &CpuVirtualAddress);
+    ret.DataPtr = CpuVirtualAddress;
+    ret.GpuAddress = GpuVirtualAddress;
+    return ret;
+}

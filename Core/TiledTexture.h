@@ -27,10 +27,9 @@ public:
     void Update(GraphicsContext& gfxContext);
     void LevelUp()
     {
-        if (m_activeMip < 10)
+        if (m_activeMip < m_MipLevels)
         {
             m_activeMip = static_cast<U8>(std::min(9, m_activeMip + 1));
-            m_activeMipChanged = true;
         }
     }
 
@@ -39,7 +38,6 @@ public:
         if (m_activeMip != 0)
         {
             m_activeMip--;
-            m_activeMipChanged = true;
         }
     }
 
@@ -50,7 +48,7 @@ public:
 
     inline const UINT GetMipsLevel() const
     {
-        return static_cast<UINT>(m_mips.size());
+        return static_cast<UINT>(m_MipLevels);
     }
 
     inline const UINT GetTiledWidth() const
@@ -73,13 +71,21 @@ public:
         return static_cast<UINT>(m_resTexHeight);
     }
 
-    void UpdateTileMapping(GraphicsContext& gfxContext);
     void UpdateVisibilityBuffer(ComputeContext& context);
     virtual void Destroy() override
     {
         GpuResource::Destroy();
-        // This leaks descriptor handles.  We should really give it back to be reused.
         m_hCpuDescriptorHandle.ptr = 0;
+        m_removedPagesReadBackBuffer.Destroy();
+        m_visibilityBuffer.Destroy();
+        m_prevVisBuffer.Destroy();
+        m_alivePagesBuffer.Destroy();
+        m_removedPagesBuffer.Destroy();
+        m_alivePagesCounterBuffer.Destroy();
+        m_removedPagesCounterBuffer.Destroy();
+        m_alivePagesReadBackBuffer.Destroy();
+        m_alivePagesCounterReadBackBuffer.Destroy();
+        m_removedPagesCounterReadBackBuffer.Destroy();
     }
 
     const D3D12_CPU_DESCRIPTOR_HANDLE& GetSRV() const { return m_hCpuDescriptorHandle; }
@@ -95,7 +101,7 @@ public:
     bool operator!() { return m_hCpuDescriptorHandle.ptr == 0; }
 
 protected:
-    void RemovePages(GraphicsContext& gContext);
+    void RemovePages();
     void AddPages(GraphicsContext& gContext);
 private:
 
@@ -109,17 +115,12 @@ private:
     };
 
     std::vector<UINT8> GenerateTextureData(UINT offsetX, UINT offsetY, UINT width, UINT height, UINT mip_level);
-    std::vector<UINT8> GenerateTextureData(UINT firstMip, UINT mipCount);
-    std::vector<MipInfo> m_mips;
     std::vector<PageInfo> m_pages;
-    std::vector<U32> m_heap_offsets;
     U32 m_resTexPixelInBytes;
     size_t m_resTexWidth, m_resTexHeight;
-    U8 m_activeMip;
-    bool m_activeMipChanged;
-    Microsoft::WRL::ComPtr<ID3D12Resource> m_uploadBuffer;
+    U8 m_activeMip,m_MipLevels;
+    Microsoft::WRL::ComPtr<ID3D12Heap> m_page_heaps;
     D3D12_PACKED_MIP_INFO m_packedMipInfo;
-    Microsoft::WRL::ComPtr<ID3D12Heap> m_heap;
     D3D12_TILE_SHAPE m_TileShape;
     D3D12_CPU_DESCRIPTOR_HANDLE m_hCpuDescriptorHandle;
     StructuredBuffer m_visibilityBuffer;
@@ -132,7 +133,7 @@ private:
     ReadbackBuffer m_removedPagesReadBackBuffer;
     ReadbackBuffer m_alivePagesCounterReadBackBuffer;
     ReadbackBuffer m_removedPagesCounterReadBackBuffer;
-    Microsoft::WRL::ComPtr<ID3D12Heap> m_page_heaps;
     ComputePSO m_computePSO;
     RootSignature m_rootSig;
+    std::unique_ptr<CPULinearAllocator> m_cpu_pages_allocator;
 };

@@ -149,6 +149,7 @@ void VirtureTexture::Startup( void )
 	freopen("stdout.txt","w+",stdout);
     SamplerDesc DefaultSamplerDesc;
     DefaultSamplerDesc.MaxAnisotropy = 0;
+    DefaultSamplerDesc.Filter = D3D12_FILTER_MINIMUM_MIN_MAG_MIP_POINT;
 
     m_RootSig.Reset(RootParams::NumPassRootParams, 2);
     m_RootSig.InitStaticSampler(0, DefaultSamplerDesc, D3D12_SHADER_VISIBILITY_PIXEL);
@@ -234,6 +235,7 @@ void VirtureTexture::Startup( void )
 void VirtureTexture::Cleanup( void )
 {
     m_world.Clear();
+    m_tiledTexture.Destroy();
 }
 
 namespace Graphics

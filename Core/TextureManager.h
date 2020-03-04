@@ -72,8 +72,6 @@ private:
     bool m_IsValid;
 };
 
-
-
 namespace TextureManager
 {
     void Initialize( const std::wstring& TextureLibRoot );
