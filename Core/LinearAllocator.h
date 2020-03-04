@@ -161,21 +161,19 @@ private:
 
 struct PageAlloc
 {
-    PageAlloc(GpuResource BaseResource, size_t ThisOffset, size_t ThisSize, void* ThisDataPtr, D3D12_GPU_VIRTUAL_ADDRESS thisGpuAddress)
-        : Buffer(BaseResource), Offset(ThisOffset), Size(ThisSize),DataPtr(ThisDataPtr), GpuAddress(thisGpuAddress){}
+    PageAlloc(GpuResource BaseResource, void* ThisDataPtr)
+        : Buffer(BaseResource),DataPtr(ThisDataPtr){}
 
     GpuResource Buffer;    // The D3D buffer associated with this memory.
-    size_t Offset;            // Offset from start of buffer resource
-    size_t Size;            // Reserved size of this allocation
     void* DataPtr;            // The CPU-writeable address
-    D3D12_GPU_VIRTUAL_ADDRESS GpuAddress;    // The GPU-visible address
-    ~PageAlloc()
+    void  Destroy()
     {
         if (DataPtr != nullptr)
         {
             Buffer.GetResource()->Unmap(0, nullptr);
             DataPtr = nullptr;
         }
+        Buffer.GetResource()->Release();
         Buffer.Destroy();
     }
 };

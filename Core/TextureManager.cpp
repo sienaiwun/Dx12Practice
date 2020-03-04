@@ -24,7 +24,7 @@
 using namespace std;
 using namespace Graphics;
 
-static UINT BytesPerPixel( DXGI_FORMAT Format )
+UINT BytesPerPixel( DXGI_FORMAT Format )
 {
     return (UINT)BitsPerPixel(Format) / 8;
 };

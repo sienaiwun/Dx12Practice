@@ -50,14 +50,14 @@ static std::vector<UINT8> GenerateTextureDataHelper(const U32 totalWidth, const 
     }
     return data;
 }
-
+UINT BytesPerPixel(DXGI_FORMAT Format);
 void TiledTexture::Create(U32 Width, U32 Height, DXGI_FORMAT Format)
 {
     Destroy();
 
     m_resTexWidth = Width;
     m_resTexHeight = Height;
-    m_resTexPixelInBytes = 4;
+    m_resTexPixelInBytes = BytesPerPixel(Format);
     m_activeMip = 0;
     U32 mipLevels = 0;
     for (U32 w = m_resTexWidth, h = m_resTexHeight; w > 0 && h > 0; w >>= 1, h >>= 1)
@@ -222,7 +222,7 @@ void TiledTexture::AddPages(GraphicsContext& gContext)
 
     const U32 tile_width = m_TileShape.WidthInTexels;
     const U32 tile_height = m_TileShape.HeightInTexels;
-    for each (int i in active_pages)
+    for (int i : active_pages)
     {
         PageInfo& page = m_pages[i];
         if (page.m_mem)
@@ -267,7 +267,7 @@ void TiledTexture::AddPages(GraphicsContext& gContext)
             Src.Type = D3D12_TEXTURE_COPY_TYPE_PLACED_FOOTPRINT;
             Src.PlacedFootprint = D3D12_PLACED_SUBRESOURCE_FOOTPRINT{ 0,
                                     { Desc.Format,
-                                        tile_width, tile_height, 1, tile_width * sizeof(U32) } };//BitsPerPixels
+                                        tile_width, tile_height, 1, tile_width *m_resTexPixelInBytes } };//BitsPerPixels
             gContext.GetCommandList()->CopyTextureRegion(&Dst, page.start_corordinate.X * tile_width, page.start_corordinate.Y * tile_height, 0, &Src, NULL);
         }
     }
@@ -297,35 +297,36 @@ void TiledTexture::RemovePages()
     removed_pages.resize(removed_page_count);
     memcpy(removed_pages.data(), m_removedPagesReadBackBuffer.Map(), removed_page_count * sizeof(int));
     m_removedPagesReadBackBuffer.Unmap();
-    for each (int i in removed_pages)
+    std::vector<D3D12_TILED_RESOURCE_COORDINATE> startCoordinates;
+    std::vector<D3D12_TILE_REGION_SIZE> regionSizes;
+    std::vector<U32> heapRangeStartOffsets;
+    std::vector<D3D12_TILE_RANGE_FLAGS> rangeFlags;
+    std::vector<U32> rangeTileCounts;
+    for (int i : removed_pages)
     {
         PageInfo& page = m_pages[i];
-        if (page.m_mem)
+        if (page.m_mem==nullptr)
             continue;
+        page.m_mem->Destroy();
         page.m_mem = nullptr;
-        std::vector<D3D12_TILED_RESOURCE_COORDINATE> startCoordinates;
-        std::vector<D3D12_TILE_REGION_SIZE> regionSizes;
-        std::vector<U32> heapRangeStartOffsets;
-        std::vector<D3D12_TILE_RANGE_FLAGS> rangeFlags;
-        std::vector<U32> rangeTileCounts;
+        
         startCoordinates.push_back(page.start_corordinate);
         regionSizes.push_back(page.regionSize);
         heapRangeStartOffsets.push_back(i);
         rangeTileCounts.push_back(1);
         rangeFlags.push_back(D3D12_TILE_RANGE_FLAG_NULL);
-        Graphics::g_CommandManager.GetCommandQueue()->UpdateTileMappings(
-            m_pResource.Get(),
-            (U32)startCoordinates.size(),
-            startCoordinates.data(),
-            regionSizes.data(),
-            m_page_heaps.Get(),
-            (U32)regionSizes.size(),
-            rangeFlags.data(),
-            heapRangeStartOffsets.data(),
-            rangeTileCounts.data(),
-            D3D12_TILE_MAPPING_FLAG_NONE);
-
     }
+    Graphics::g_CommandManager.GetCommandQueue()->UpdateTileMappings(
+        m_pResource.Get(),
+        (U32)startCoordinates.size(),
+        startCoordinates.data(),
+        regionSizes.data(),
+        m_page_heaps.Get(),
+        (U32)regionSizes.size(),
+        rangeFlags.data(),
+        heapRangeStartOffsets.data(),
+        rangeTileCounts.data(),
+        D3D12_TILE_MAPPING_FLAG_NONE);
 }
 
 void TiledTexture::Update(GraphicsContext& gfxContext)
@@ -342,7 +343,7 @@ void TiledTexture::Update(GraphicsContext& gfxContext)
 
 std::vector<UINT8> TiledTexture::GenerateTextureData(U32 offsetX, U32 offsetY, U32 W, U32 H, U32 currentMip)
 {
-    if (currentMip <= 2)
+    if (currentMip <= m_packedMipInfo.StartTileIndexInOverallResource)
         return GenerateTextureDataHelper(m_resTexWidth,m_resTexHeight,m_resTexPixelInBytes,offsetX, offsetY, W, H, currentMip,1);
     else
     {

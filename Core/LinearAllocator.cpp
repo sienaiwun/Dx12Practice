@@ -233,8 +233,7 @@ PageAlloc PageAllocator::Allocate(size_t SizeInBytes, size_t Alignment )
         &ResourceDesc, DefaultUsage, nullptr, MY_IID_PPV_ARGS(&pBuffer)));
 
     pBuffer->SetName(L"Tiled Page");
-    D3D12_GPU_VIRTUAL_ADDRESS GpuVirtualAddress = pBuffer->GetGPUVirtualAddress();
     void* CpuVirtualAddress;
     pBuffer->Map(0, nullptr, &CpuVirtualAddress);
-    return PageAlloc(GpuResource(pBuffer, D3D12_RESOURCE_STATE_COMMON), 0, SizeInBytes, CpuVirtualAddress, GpuVirtualAddress);
+    return PageAlloc(GpuResource(pBuffer, D3D12_RESOURCE_STATE_COMMON), CpuVirtualAddress);
 }

@@ -88,6 +88,11 @@ public:
         m_removedPagesCounterReadBackBuffer.Destroy();
         if(m_page_heaps)
             m_page_heaps->Release();
+        for (PageInfo& page : m_pages)
+        {
+            if (page.m_mem)
+                page.m_mem->Destroy();
+        }
         m_pages.clear();
     }
 

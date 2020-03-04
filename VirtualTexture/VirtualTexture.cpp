@@ -93,8 +93,6 @@ private:
 
     void UpdateGpuWorld(GraphicsContext& gfxContext);
 
-    std::vector<U8> GenerateTextureData(U32 firstMip, U32 lastMip);
-
     enum eObjectFilter { kOpaque = 0x1, kCutout = 0x2, kTransparent = 0x4, kAll = 0xF, kNone = 0x0 };
     void RenderObjects( GraphicsContext& Context, const Matrix4& ViewProjMat, eObjectFilter Filter = kAll);
   
@@ -146,10 +144,8 @@ VirtureTexture::VirtureTexture(void)
 
 void VirtureTexture::Startup( void )
 {
-	freopen("stdout.txt","w+",stdout);
     SamplerDesc DefaultSamplerDesc;
     DefaultSamplerDesc.MaxAnisotropy = 0;
-    DefaultSamplerDesc.Filter = D3D12_FILTER_MINIMUM_MIN_MAG_MIP_POINT;
 
     m_RootSig.Reset(RootParams::NumPassRootParams, 2);
     m_RootSig.InitStaticSampler(0, DefaultSamplerDesc, D3D12_SHADER_VISIBILITY_PIXEL);
