@@ -161,8 +161,8 @@ private:
 
 struct PageAlloc
 {
-    PageAlloc(GpuResource BaseResource, size_t ThisOffset, size_t ThisSize)
-        : Buffer(BaseResource), Offset(ThisOffset), Size(ThisSize) {}
+    PageAlloc(GpuResource BaseResource, size_t ThisOffset, size_t ThisSize, void* ThisDataPtr, D3D12_GPU_VIRTUAL_ADDRESS thisGpuAddress)
+        : Buffer(BaseResource), Offset(ThisOffset), Size(ThisSize),DataPtr(ThisDataPtr), GpuAddress(thisGpuAddress){}
 
     GpuResource Buffer;    // The D3D buffer associated with this memory.
     size_t Offset;            // Offset from start of buffer resource
@@ -179,10 +179,10 @@ struct PageAlloc
         Buffer.Destroy();
     }
 };
-class CPULinearAllocator
+class PageAllocator
 {
 public:
-    CPULinearAllocator(const size_t page_size) : m_AllocationType(kCpuWritable),m_PageSize(page_size)
+    PageAllocator(const size_t page_size) : m_AllocationType(kCpuWritable),m_PageSize(page_size)
     {   }
     PageAlloc Allocate(size_t SizeInBytes, size_t Alignment = DEFAULT_ALIGN);
 private:

@@ -16,13 +16,13 @@ public:
     
     ~PageInfo() = default;
 
-    void LoadData(std::vector<UINT8> data, CPULinearAllocator& allocator);
+    void LoadData(std::vector<UINT8> data, PageAllocator& allocator);
 
     D3D12_TILED_RESOURCE_COORDINATE start_corordinate;
     
     D3D12_TILE_REGION_SIZE regionSize;
     
-    U8 mipLevel;
+    U32 mipLevel;
     
     std::unique_ptr<PageAlloc> m_mem = nullptr;
     

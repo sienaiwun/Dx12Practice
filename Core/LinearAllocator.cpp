@@ -193,7 +193,7 @@ DynAlloc LinearAllocator::Allocate(size_t SizeInBytes, size_t Alignment)
 }
 
 
-PageAlloc CPULinearAllocator::Allocate(size_t SizeInBytes, size_t Alignment )
+PageAlloc PageAllocator::Allocate(size_t SizeInBytes, size_t Alignment )
 {
     // almost the same as  LinearAllocator::Allocate
     const size_t AlignmentMask = Alignment - 1;
@@ -233,12 +233,8 @@ PageAlloc CPULinearAllocator::Allocate(size_t SizeInBytes, size_t Alignment )
         &ResourceDesc, DefaultUsage, nullptr, MY_IID_PPV_ARGS(&pBuffer)));
 
     pBuffer->SetName(L"Tiled Page");
-
-    PageAlloc ret(GpuResource(pBuffer, D3D12_RESOURCE_STATE_COMMON), 0, SizeInBytes);
     D3D12_GPU_VIRTUAL_ADDRESS GpuVirtualAddress = pBuffer->GetGPUVirtualAddress();
     void* CpuVirtualAddress;
     pBuffer->Map(0, nullptr, &CpuVirtualAddress);
-    ret.DataPtr = CpuVirtualAddress;
-    ret.GpuAddress = GpuVirtualAddress;
-    return ret;
+    return PageAlloc(GpuResource(pBuffer, D3D12_RESOURCE_STATE_COMMON), 0, SizeInBytes, CpuVirtualAddress, GpuVirtualAddress);
 }

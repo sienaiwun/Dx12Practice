@@ -23,13 +23,13 @@ enum TiledComputerParams :unsigned char
 class TiledTexture : public GpuResource
 {
 public:
-    void Create(size_t Width, size_t Height, DXGI_FORMAT Format);
+    void Create(U32 Width, U32 Height, DXGI_FORMAT Format);
     void Update(GraphicsContext& gfxContext);
     void LevelUp()
     {
         if (m_activeMip < m_MipLevels)
         {
-            m_activeMip = static_cast<U8>(std::min(9, m_activeMip + 1));
+            m_activeMip = static_cast<U32>(std::min(m_MipLevels-1, m_activeMip + 1));
         }
     }
 
@@ -86,6 +86,9 @@ public:
         m_alivePagesReadBackBuffer.Destroy();
         m_alivePagesCounterReadBackBuffer.Destroy();
         m_removedPagesCounterReadBackBuffer.Destroy();
+        if(m_page_heaps)
+            m_page_heaps->Release();
+        m_pages.clear();
     }
 
     const D3D12_CPU_DESCRIPTOR_HANDLE& GetSRV() const { return m_hCpuDescriptorHandle; }
@@ -117,8 +120,8 @@ private:
     std::vector<UINT8> GenerateTextureData(UINT offsetX, UINT offsetY, UINT width, UINT height, UINT mip_level);
     std::vector<PageInfo> m_pages;
     U32 m_resTexPixelInBytes;
-    size_t m_resTexWidth, m_resTexHeight;
-    U8 m_activeMip,m_MipLevels;
+    U32 m_resTexWidth, m_resTexHeight;
+    U32 m_activeMip,m_MipLevels;
     Microsoft::WRL::ComPtr<ID3D12Heap> m_page_heaps;
     D3D12_PACKED_MIP_INFO m_packedMipInfo;
     D3D12_TILE_SHAPE m_TileShape;
@@ -135,5 +138,5 @@ private:
     ReadbackBuffer m_removedPagesCounterReadBackBuffer;
     ComputePSO m_computePSO;
     RootSignature m_rootSig;
-    std::unique_ptr<CPULinearAllocator> m_cpu_pages_allocator;
+    std::unique_ptr<PageAllocator> m_cpu_pages_allocator;
 };

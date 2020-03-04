@@ -52,6 +52,9 @@ namespace SceneView
 
 	void World::Clear()
 	{
+        ForEach([&](Model& model) {
+            model.~Model();
+        });
 		m_lighting->Shutdown();
 	}
 

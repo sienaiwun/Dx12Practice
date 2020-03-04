@@ -252,6 +252,10 @@ void Graphics::DestroyRenderingBuffers()
     g_HorizontalBuffer.Destroy();
     g_PostEffectsBuffer.Destroy();
 
+    g_GBufferColorBuffer.Destroy();
+    g_GBufferNormalBuffer.Destroy();
+    g_GBufferMaterialBuffer.Destroy();
+
     g_ShadowBuffer.Destroy();
 
     g_SSAOFullScreen.Destroy();

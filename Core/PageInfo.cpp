@@ -11,7 +11,7 @@ PageInfo::PageInfo(const PageInfo & page) :
     is_packed(page.is_packed)
 {}
 
-void PageInfo::LoadData(std::vector<UINT8> data, CPULinearAllocator& allocator)
+void PageInfo::LoadData(std::vector<UINT8> data, PageAllocator& allocator)
 {
     CommandContext& InitContext = CommandContext::Begin();
     const size_t NumBytes = data.size() * sizeof(UINT8);
