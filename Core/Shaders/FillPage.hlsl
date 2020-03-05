@@ -38,10 +38,12 @@ void main(uint3 Gid : SV_GroupID, uint3 DTid : SV_DispatchThreadID, uint3 GTid :
 
     if (Index >= MaxPageCount)
         return;
-
+    int IsPageActive = VisibilityBuffer[Index];
+    if (Index == MaxPageCount - 1)
+        IsPageActive = 1;
     Index += PageOffset;
 
-    if (VisibilityBuffer[Index] == 1)
+    if (IsPageActive == 1)
     {
         uint currentTexureID;
         InterlockedAdd(AlivePageCountBuffer[0], 1, currentTexureID);
@@ -58,7 +60,7 @@ void main(uint3 Gid : SV_GroupID, uint3 DTid : SV_DispatchThreadID, uint3 GTid :
         RemovePageTableBuffer[currentTexureID] = Index;
     }
 
-    PrevVisibBuffer[Index] = VisibilityBuffer[Index];
+    PrevVisibBuffer[Index] = IsPageActive;
 
     // clear page
     VisibilityBuffer[Index] = 0;

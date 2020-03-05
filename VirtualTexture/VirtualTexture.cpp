@@ -146,6 +146,7 @@ void VirtureTexture::Startup( void )
 {
     SamplerDesc DefaultSamplerDesc;
     DefaultSamplerDesc.MaxAnisotropy = 0;
+    DefaultSamplerDesc.Filter =  D3D12_FILTER_MIN_MAG_LINEAR_MIP_POINT;
 
     m_RootSig.Reset(RootParams::NumPassRootParams, 2);
     m_RootSig.InitStaticSampler(0, DefaultSamplerDesc, D3D12_SHADER_VISIBILITY_PIXEL);
@@ -225,7 +226,7 @@ void VirtureTexture::Startup( void )
     SkyPass::Initialize();
 
 
-    m_tiledTexture.Create(512, 512, DXGI_FORMAT_R8G8B8A8_UNORM);
+    m_tiledTexture.Create(512*8, 512 * 8, DXGI_FORMAT_R8G8B8A8_UNORM);
 }
 
 void VirtureTexture::Cleanup( void )

@@ -343,7 +343,7 @@ void TiledTexture::Update(GraphicsContext& gfxContext)
 
 std::vector<UINT8> TiledTexture::GenerateTextureData(U32 offsetX, U32 offsetY, U32 W, U32 H, U32 currentMip)
 {
-    if (currentMip <= m_packedMipInfo.StartTileIndexInOverallResource)
+    if (currentMip < m_packedMipInfo.NumStandardMips)
         return GenerateTextureDataHelper(m_resTexWidth,m_resTexHeight,m_resTexPixelInBytes,offsetX, offsetY, W, H, currentMip,1);
     else
     {

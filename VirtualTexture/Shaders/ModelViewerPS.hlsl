@@ -58,14 +58,14 @@ float3 main(VSOutput vsOutput) : SV_Target0
      float LOD = texTiled.CalculateLevelOfDetailUnclamped(sampler0, vsOutput.uv);
     LOD = clamp(LOD, 0.0f, maxLod);
     uint residencyCode = 0;
-    float minLod = floor(LOD);
+    uint minLod = floor(LOD);
     minLod = clamp(minLod, 0.0f, maxLod);
     float localMinLod = minLod;
    
     [loop]
     do
     {
-        color = texTiled.Sample(sampler0, vsOutput.uv, 0, min(localMinLod, maxLod), residencyCode);
+        color = texTiled.Sample(sampler0, vsOutput.uv, 0, floor(min(localMinLod, maxLod)), residencyCode);
         localMinLod += 1.0f;
 
         if (localMinLod > maxLod)
