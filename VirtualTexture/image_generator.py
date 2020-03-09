@@ -19,7 +19,7 @@ def image_char(char, image_size, font_size, outline_lenght, number_str):
         draw.rectangle([(outline_lenght, outline_lenght), (image_size-outline_lenght, image_size-outline_lenght)], fill =(255,255,255) )
         font_path = "C:\Windows\Fonts\Arial.ttf"
         font = ImageFont.truetype(font_path, font_size)
-        draw.text((to_scale_size(5), to_scale_size(135)), char, (0,0,0),font=font)
+        draw.text((to_scale_size(5), to_scale_size(135)), char, (255,0,0),font=font)
         save_location = os.getcwd()
         dir_name = save_location + os.path.sep + image_dir_name
         if not os.path.isdir(dir_name):

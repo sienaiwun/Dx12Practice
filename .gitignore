@@ -23,3 +23,6 @@ Packages
 *.pdb
 Build_VS16/
 VirtualTexture/StreamingAssets/
+VirtualTexture/image_generator.pyc
+VirtualTexture/cache/
+VirtualTexture/images/

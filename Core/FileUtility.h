@@ -31,6 +31,9 @@ namespace Utility
     // This operation blocks until the entire file is read.
     ByteArray ReadFileSync(const wstring& fileName);
 
+    // fill in flat data in outData
+    U32 FillFlatData(U32 beginIndex, ByteArray& image_data, vector<::byte>& outData);
+    
     // Same as previous except that it does not block but instead returns a task.
     task<ByteArray> ReadFileAsync(const wstring& fileName);
 

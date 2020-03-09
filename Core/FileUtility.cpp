@@ -126,6 +126,24 @@ ByteArray DecompressZippedFile( wstring& fileName )
     return DecompressedFile;
 }
 
+U32  Utility::FillFlatData(U32 beginIndex, ByteArray& image_data, vector<::byte>& outData)
+{
+    const uint8_t* filePtr = image_data->data();
+    U32 data_size = 0;
+    data_size += 13;
+    data_size += sizeof(uint16_t);
+    data_size += sizeof(uint16_t);
+    for (; beginIndex < outData.size()&& data_size< image_data->size();)
+    {
+        outData[beginIndex++] = *(filePtr + data_size + 2);
+        outData[beginIndex++] = *(filePtr + data_size + 1);
+        outData[beginIndex++] = *(filePtr + data_size + 0);
+        outData[beginIndex++] = 255;
+        data_size += 3;
+    }
+    return beginIndex;
+}
+
 ByteArray Utility::ReadFileSync( const wstring& fileName)
 {
     return ReadFileHelperEx(make_shared<wstring>(fileName));

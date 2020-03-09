@@ -61,7 +61,9 @@ float3 main(VSOutput vsOutput) : SV_Target0
     uint minLod = floor(LOD);
     minLod = clamp(minLod, 0.0f, maxLod);
     float localMinLod = minLod;
-   
+    color = texTiled.SampleLevel(sampler0, vsOutput.uv, minLod);// naive method
+
+    if(length(color.xyz) < 0.01)
     [loop]
     do
     {
@@ -78,13 +80,11 @@ float3 main(VSOutput vsOutput) : SV_Target0
    for (int i = 1; i <= int(minLod); i++)
    {
        pageOffset += pageCount * pageCount;
-
        pageCount = pageCount / 2;
    }
 
    pageOffset += uint(float(pageCount) *  vsOutput.uv.x) + uint(float(pageCount) *  vsOutput.uv.y) * pageCount;
    VisibilityBuffer[pageOffset] = 1;
-   //color = texTiled.SampleLevel(sampler0, vsOutput.uv, active_mip);
-
+  
     return color.xyz;
 }
