@@ -23,7 +23,7 @@ enum TiledComputerParams :unsigned char
 class TiledTexture : public GpuResource
 {
 public:
-    void Create(U32 Width, U32 Height, DXGI_FORMAT Format);
+    void Create(std::wstring folder, U32 Width, U32 Height, DXGI_FORMAT Format);
     void Update(GraphicsContext& gfxContext);
     void LevelUp()
     {
@@ -124,6 +124,8 @@ private:
 
     std::vector<UINT8> GenerateTextureData(UINT offsetX, UINT offsetY, UINT width, UINT height, UINT mip_level);
     std::vector<PageInfo> m_pages;
+    std::wstring m_folder_path;
+    bool m_use_test_texture;
     U32 m_resTexPixelInBytes;
     U32 m_resTexWidth, m_resTexHeight;
     U32 m_activeMip,m_MipLevels;

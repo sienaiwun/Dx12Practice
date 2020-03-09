@@ -22,3 +22,4 @@ Packages
 *.opendb
 *.pdb
 Build_VS16/
+VirtualTexture/StreamingAssets/

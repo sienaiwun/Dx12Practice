@@ -3,6 +3,7 @@
 #include "CommandContext.h"
 #include "TiledTexture.h"
 #include "CompiledShaders/FillPage.h"
+#include "FileUtility.h"
 #include <map>
 #include <thread>
 
@@ -51,10 +52,11 @@ static std::vector<UINT8> GenerateTextureDataHelper(const U32 totalWidth, const 
     return data;
 }
 UINT BytesPerPixel(DXGI_FORMAT Format);
-void TiledTexture::Create(U32 Width, U32 Height, DXGI_FORMAT Format)
+void TiledTexture::Create(std::wstring folder, U32 Width, U32 Height, DXGI_FORMAT Format)
 {
     Destroy();
-
+    m_folder_path = std::move(folder);
+    m_use_test_texture = m_folder_path == L"";
     m_resTexWidth = Width;
     m_resTexHeight = Height;
     m_resTexPixelInBytes = BytesPerPixel(Format);
@@ -343,11 +345,51 @@ void TiledTexture::Update(GraphicsContext& gfxContext)
 
 std::vector<UINT8> TiledTexture::GenerateTextureData(U32 offsetX, U32 offsetY, U32 W, U32 H, U32 currentMip)
 {
-    if (currentMip < m_packedMipInfo.NumStandardMips)
-        return GenerateTextureDataHelper(m_resTexWidth,m_resTexHeight,m_resTexPixelInBytes,offsetX, offsetY, W, H, currentMip,1);
+    if(m_use_test_texture)
+    {
+        if (currentMip < m_packedMipInfo.NumStandardMips)
+            return GenerateTextureDataHelper(m_resTexWidth,m_resTexHeight,m_resTexPixelInBytes,offsetX, offsetY, W, H, currentMip,1);
+        else
+        {
+           return  GenerateTextureDataHelper(m_resTexWidth, m_resTexHeight, m_resTexPixelInBytes, offsetX, offsetY, W, H, currentMip, m_packedMipInfo.NumPackedMips);
+        }
+    }
     else
     {
-       return  GenerateTextureDataHelper(m_resTexWidth, m_resTexHeight, m_resTexPixelInBytes, offsetX, offsetY, W, H, currentMip, m_packedMipInfo.NumPackedMips);
+        if (currentMip < m_packedMipInfo.NumStandardMips)
+        {
+            //return GenerateTextureDataHelper(m_resTexWidth, m_resTexHeight, m_resTexPixelInBytes, offsetX, offsetY, W, H, currentMip, 1);
+            const U32 tile_x = offsetX / W;
+            const U32 tile_y = offsetY / H;
+            const std::wstring file_name = L"Tiles_MIP" + std::to_wstring(currentMip) + L"_Y" + std::to_wstring(tile_y) + L"_X" + std::to_wstring(tile_x) + L".tga";
+            std::shared_ptr<std::vector<UINT8>> ba = Utility::ReadFileSync(m_folder_path + L"/" + file_name);
+            const U32 dataSize = W * H* 4;
+            std::vector<UINT8> data(dataSize);
+            const uint8_t* filePtr =ba->data();
+            filePtr += 13;
+            filePtr += sizeof(uint16_t);
+            filePtr += sizeof(uint16_t);
+            for (U32 index = 0; index < dataSize;)
+            {
+                data[index++] = *(filePtr + 2);
+                data[index++] = *(filePtr + 1);
+                data[index++] = *(filePtr + 0);
+                data[index++] = 255;
+                filePtr += 3;
+            }
+            return  data;
+        }
+        else
+        {
+            const U32 tile_x = offsetX / W;
+            const U32 tile_y = offsetY / H;
+            const std::wstring file_name = L"Tiles_MIP" + std::to_wstring(currentMip) + L"_Y" + std::to_wstring(tile_y) + L"_X" + std::to_wstring(tile_x) + L".dds";
+            std::shared_ptr<std::vector<UINT8>> ba = Utility::ReadFileSync(m_folder_path + L"/" + file_name);
+
+
+            return  GenerateTextureDataHelper(m_resTexWidth, m_resTexHeight, m_resTexPixelInBytes, offsetX, offsetY, W, H, currentMip, m_packedMipInfo.NumPackedMips);
+        }
+       
     }
    
 }
