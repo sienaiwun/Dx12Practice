@@ -164,6 +164,7 @@
       <DeploymentContent>true</DeploymentContent>
     </None>
     <None Include="packages.config" />
+    <None Include="Shaders\FillLightGridCS.hlsli" />
     <None Include="Shaders\ModelViewerRS.hlsli" />
   </ItemGroup>
   <ItemGroup>
@@ -176,6 +177,10 @@
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|x64'">../../Core/</AdditionalIncludeDirectories>
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Profile|x64'">../../Core/</AdditionalIncludeDirectories>
     </FxCompile>
+    <FxCompile Include="Shaders\FillLightGridCS_16.hlsl" />
+    <FxCompile Include="Shaders\FillLightGridCS_24.hlsl" />
+    <FxCompile Include="Shaders\FillLightGridCS_32.hlsl" />
+    <FxCompile Include="Shaders\FillLightGridCS_8.hlsl" />
     <FxCompile Include="Shaders\ModelViewerPS.hlsl">
       <ShaderType>Pixel</ShaderType>
     </FxCompile>
