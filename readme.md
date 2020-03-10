@@ -14,7 +14,7 @@ In the following image, each color block is a quad draw-call. The shape is inspa
 ## Tiled Texture:
 * Using D3D12 reserved texture as virtual texture's memory holder.
 ![vitual textrue](https://github.com/sienaiwun/publicImgs/blob/master/imgs/VirtualTexture/virtual_texture_checkbox_dx12.gif?raw=true)
-* Tiled memory visualization
+* Tiled memory visualization.
 For the view like this:
 ![checkbox_vt.png](https://github.com/sienaiwun/publicImgs/blob/master/imgs/VirtualTexture/checkbox_vt.png?raw=true)
 Only a small subset of the entire texture is loaded. The actual loaded texture is visualized as:
