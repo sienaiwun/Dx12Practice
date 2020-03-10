@@ -6,10 +6,16 @@ This project is based on Microsfts&copy; [MiniEngine](https://github.com/microso
 * A simple Computer shader example inspaird by [Plantary Gear](https://www.shadertoy.com/view/MsGczV)
 ![image](https://github.com/sienaiwun/Dx12Practice/blob/master/Images/compute.gif?raw=true)
 
-## Gpu Tiles Culling:
+## Gpu Tiles Culling and Indirect draw:
 * Accelerate draw-calls submitions using indirect draw calls generated from GPU-based tiles culling. 
 In the following image, each color block is a quad draw-call. The shape is inspaird by [Heart - 2D](https://www.shadertoy.com/view/XsfGRn)
 ![image](https://github.com/sienaiwun/Dx12Practice/blob/master/Images/IndirectDraw.gif?raw=true)
 
 ## Tiled Texture:
-* Using D3D12 reserved texture as texture's holder.
+* Using D3D12 reserved texture as virtual texture's memory holder.
+![vitual textrue](https://github.com/sienaiwun/publicImgs/blob/master/imgs/VirtualTexture/virtual_texture_checkbox_dx12.gif?raw=true)
+* Tiled memory visualization
+For the view like this:
+![checkbox_vt.png](https://github.com/sienaiwun/publicImgs/blob/master/imgs/VirtualTexture/checkbox_vt.png?raw=true)
+Only a small subset of the entire texture is loaded. The actual loaded texture is visualized as:
+![mip_chain.gif](https://github.com/sienaiwun/publicImgs/blob/master/imgs/VirtualTexture/mip_chain.gif?raw=true)
