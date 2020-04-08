@@ -1,5 +1,6 @@
 # D3D12 practice 
 [![Build status](https://ci.appveyor.com/api/projects/status/4n54x9aia7tslckr?svg=true)](https://ci.appveyor.com/project/sienaiwun/dx12practice)
+[![Codacy Badge](https://api.codacy.com/project/badge/Grade/8d155979fc2444bbb56479190020eb14)](https://www.codacy.com/manual/sienaiwun/Dx12Practice?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=sienaiwun/Dx12Practice&amp;utm_campaign=Badge_Grade)
 
 This project is based on Microsfts&copy; [MiniEngine](https://github.com/microsoft/DirectX-Graphics-Samples/tree/master/MiniEngine). Besides that I add some toy demos
 ## Entry
