@@ -1,4 +1,6 @@
-# D3D12 practice
+# D3D12 practice 
+[![Build status](https://ci.appveyor.com/api/projects/status/4n54x9aia7tslckr?svg=true)](https://ci.appveyor.com/project/sienaiwun/dx12practice)
+
 This project is based on Microsfts&copy; [MiniEngine](https://github.com/microsoft/DirectX-Graphics-Samples/tree/master/MiniEngine). Besides that I add some toy demos
 ## Entry
 * Open ModelViewer/ModelViewer_VS15.sln
