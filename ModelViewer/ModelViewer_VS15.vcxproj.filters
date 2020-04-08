@@ -255,9 +255,6 @@
     <FxCompile Include="Shaders\WaveTileCountPS.hlsl">
       <Filter>Shaders</Filter>
     </FxCompile>
-    <FxCompile Include="Shaders\ConstantColorPS.hlsl">
-      <Filter>Shaders</Filter>
-    </FxCompile>
     <FxCompile Include="Shaders\ForwardPS.hlsl">
       <Filter>Shaders</Filter>
     </FxCompile>

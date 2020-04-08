@@ -43,7 +43,6 @@
 #include "CompiledShaders/DepthViewerPS.h"
 #include "CompiledShaders/ModelViewerVS.h"
 #include "CompiledShaders/ModelViewerPS.h"
-#include "CompiledShaders/ConstantColorPS.h"
 #include "CompiledShaders/ForwardPS.h"
 #include "CompiledShaders/GBufferPS.h"
 #include "CompiledShaders/DeferredShading.h"
@@ -68,7 +67,6 @@ enum RootParams
 	MaterialsSRVs,
 	LightingSRVs,
 	PerModelConstant,
-	PSGameCBuffer,
 	GBufferSRVs,
 	WorldParam,
 	NumPassRootParams,
@@ -109,7 +107,6 @@ private:
 	GraphicsPSO m_GBufferPSO;
 	GraphicsPSO m_DefferedShadingPSO;
 	GraphicsPSO m_ForwardPSO;
-	GraphicsPSO m_ModelWireFramePSO;
 #ifdef _WAVE_OP
     GraphicsPSO m_DepthWaveOpsPSO;
     GraphicsPSO m_ModelWaveOpsPSO;
@@ -145,7 +142,6 @@ NumVar ShadowDimY("Application/Lighting/Shadow Dim Y", 3000, 1000, 10000, 100 );
 NumVar ShadowDimZ("Application/Lighting/Shadow Dim Z", 3000, 1000, 10000, 100 );
 
 BoolVar ShowWaveTileCounts("Application/Forward+/Show Wave Tile Counts", false);
-BoolVar ShowWireFrame("Application/Forward+/Show WireFrame", false);
 #ifdef _WAVE_OP
 BoolVar EnableWaveOps("Application/Forward+/Enable Wave Ops", true);
 #endif
@@ -165,7 +161,6 @@ void ModelViewer::Startup( void )
     m_RootSig[RootParams::LightingSRVs].InitAsDescriptorRange(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 64, 6, D3D12_SHADER_VISIBILITY_PIXEL);
 	m_RootSig[RootParams::GBufferSRVs].InitAsDescriptorRange(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 32, 4, D3D12_SHADER_VISIBILITY_PIXEL);
     m_RootSig[RootParams::PerModelConstant].InitAsConstants(1, 2, D3D12_SHADER_VISIBILITY_VERTEX);
-	m_RootSig[RootParams::PSGameCBuffer].InitAsConstantBuffer(SLOT_CBUFFER_GAME, D3D12_SHADER_VISIBILITY_PIXEL);
 	m_RootSig[RootParams::WorldParam].InitAsConstantBuffer(SLOT_CBUFFER_WORLD, D3D12_SHADER_VISIBILITY_ALL);
     m_RootSig.Finalize(L"ModelViewer", D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT);
 
@@ -246,12 +241,7 @@ void ModelViewer::Startup( void )
     m_ModelWaveOpsPSO.Finalize();
 #endif
 
-	// Full color pass
-	m_ModelWireFramePSO = m_ForwardPlusPSO;
-	m_ModelWireFramePSO.SetRasterizerState(RasterizerDefaultWireFrame);
-	m_ModelWireFramePSO.SetDepthStencilState(DepthStateGreatEqual);
-	m_ModelWireFramePSO.SetPixelShader(SHADER_ARGS(g_pConstantColorPS));
-	m_ModelWireFramePSO.Finalize();
+
 
     m_CutoutModelPSO = m_ForwardPlusPSO;
     m_CutoutModelPSO.SetRasterizerState(RasterizerTwoSided);
@@ -390,9 +380,7 @@ void ModelViewer::UpdateGpuWorld(GraphicsContext& gfxContext)
 
 
 
-    psWireFrameColorConstants.wireFrameColor = Vector3(0, 0, 1);
-    gfxContext.SetDynamicConstantBufferView(RootParams::PSGameCBuffer, sizeof(psWireFrameColorConstants), &psWireFrameColorConstants);
-
+    
 }
 
 void ModelViewer::RenderObjects(GraphicsContext& gfxContext, const Matrix4& viewProjMat, eObjectFilter Filter)
@@ -644,11 +632,7 @@ void ModelViewer::RenderScene( void )
 					gfxContext.SetPipelineState(m_CutoutModelPSO);
 					RenderObjects(gfxContext, camViewProjMat, kCutout);
 				}
-				if (ShowWireFrame)
-				{
-					gfxContext.SetPipelineState(m_ModelWireFramePSO);
-					RenderObjects(gfxContext, camViewProjMat, kOpaque);
-				}
+				
 			}
 
 			
