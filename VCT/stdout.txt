@@ -1,0 +1,538 @@
+model stats:
+bounding box: <-52.786098, 55.799999, -174.000000> <47.213902, 155.800003, -74.000000>
+vertex data size: 1344
+index data size: 72
+vertex data size depth-only: 96
+
+mesh count: 1
+mesh 0
+vertices: 24
+indices: 36
+vertex stride: 56
+attrib 0: offset 0, normalized 0, components 3, format float
+attrib 1: offset 12, normalized 0, components 2, format float
+attrib 2: offset 20, normalized 0, components 3, format float
+attrib 3: offset 32, normalized 0, components 3, format float
+attrib 4: offset 44, normalized 0, components 3, format float
+vertices depth-only: 8
+vertex stride depth-only: 12
+attrib 0: offset 0, normalized 0, components 3, format float
+
+material count: 1
+material diffuse tex:models/material 0
+
+model stats:
+bounding box: <-52.565208, -48.436329, -52.792789> <47.434792, 51.563671, 47.207211>
+vertex data size: 129024
+index data size: 4608
+vertex data size depth-only: 4632
+
+mesh count: 1
+mesh 0
+vertices: 2304
+indices: 2304
+vertex stride: 56
+attrib 0: offset 0, normalized 0, components 3, format float
+attrib 1: offset 12, normalized 0, components 2, format float
+attrib 2: offset 20, normalized 0, components 3, format float
+attrib 3: offset 32, normalized 0, components 3, format float
+attrib 4: offset 44, normalized 0, components 3, format float
+vertices depth-only: 386
+vertex stride depth-only: 12
+attrib 0: offset 0, normalized 0, components 3, format float
+
+material count: 1
+material diffuse tex:models/material 0
+
+model stats:
+bounding box: <-52.786098, 34.100010, 60.799999> <47.213902, 234.100006, 160.800003>
+vertex data size: 136416
+index data size: 4992
+vertex data size depth-only: 5016
+
+mesh count: 1
+mesh 0
+vertices: 2436
+indices: 2496
+vertex stride: 56
+attrib 0: offset 0, normalized 0, components 3, format float
+attrib 1: offset 12, normalized 0, components 2, format float
+attrib 2: offset 20, normalized 0, components 3, format float
+attrib 3: offset 32, normalized 0, components 3, format float
+attrib 4: offset 44, normalized 0, components 3, format float
+vertices depth-only: 418
+vertex stride depth-only: 12
+attrib 0: offset 0, normalized 0, components 3, format float
+
+material count: 1
+material diffuse tex:models/material 0
+
+model stats:
+bounding box: <-402.786102, -48.436329, -401.399994> <397.213898, 234.100006, 398.600006>
+vertex data size: 411320
+index data size: 15936
+vertex data size depth-only: 16308
+
+mesh count: 1
+mesh 0
+vertices: 7345
+indices: 7968
+vertex stride: 56
+attrib 0: offset 0, normalized 0, components 3, format float
+attrib 1: offset 12, normalized 0, components 2, format float
+attrib 2: offset 20, normalized 0, components 3, format float
+attrib 3: offset 32, normalized 0, components 3, format float
+attrib 4: offset 44, normalized 0, components 3, format float
+vertices depth-only: 1359
+vertex stride depth-only: 12
+attrib 0: offset 0, normalized 0, components 3, format float
+
+material count: 2
+material diffuse tex:models/material 0
+material diffuse tex:models/material 1
+
+model stats:
+bounding box: <-1920.945923, -126.442497, -1182.807129> <1799.908081, 1429.433228, 1105.426025>
+vertex data size: 12292672
+index data size: 1673244
+vertex data size depth-only: 1843776
+
+mesh count: 34
+mesh 0
+vertices: 16152
+indices: 54582
+vertex stride: 56
+attrib 0: offset 0, normalized 0, components 3, format float
+attrib 1: offset 12, normalized 0, components 2, format float
+attrib 2: offset 20, normalized 0, components 3, format float
+attrib 3: offset 32, normalized 0, components 3, format float
+attrib 4: offset 44, normalized 0, components 3, format float
+vertices depth-only: 13754
+vertex stride depth-only: 12
+attrib 0: offset 0, normalized 0, components 3, format float
+mesh 1
+vertices: 2163
+indices: 5616
+vertex stride: 56
+attrib 0: offset 0, normalized 0, components 3, format float
+attrib 1: offset 12, normalized 0, components 2, format float
+attrib 2: offset 20, normalized 0, components 3, format float
+attrib 3: offset 32, normalized 0, components 3, format float
+attrib 4: offset 44, normalized 0, components 3, format float
+vertices depth-only: 2132
+vertex stride depth-only: 12
+attrib 0: offset 0, normalized 0, components 3, format float
+mesh 2
+vertices: 11323
+indices: 53064
+vertex stride: 56
+attrib 0: offset 0, normalized 0, components 3, format float
+attrib 1: offset 12, normalized 0, components 2, format float
+attrib 2: offset 20, normalized 0, components 3, format float
+attrib 3: offset 32, normalized 0, components 3, format float
+attrib 4: offset 44, normalized 0, components 3, format float
+vertices depth-only: 8992
+vertex stride depth-only: 12
+attrib 0: offset 0, normalized 0, components 3, format float
+mesh 3
+vertices: 3016
+indices: 12258
+vertex stride: 56
+attrib 0: offset 0, normalized 0, components 3, format float
+attrib 1: offset 12, normalized 0, components 2, format float
+attrib 2: offset 20, normalized 0, components 3, format float
+attrib 3: offset 32, normalized 0, components 3, format float
+attrib 4: offset 44, normalized 0, components 3, format float
+vertices depth-only: 2241
+vertex stride depth-only: 12
+attrib 0: offset 0, normalized 0, components 3, format float
+mesh 4
+vertices: 9626
+indices: 50688
+vertex stride: 56
+attrib 0: offset 0, normalized 0, components 3, format float
+attrib 1: offset 12, normalized 0, components 2, format float
+attrib 2: offset 20, normalized 0, components 3, format float
+attrib 3: offset 32, normalized 0, components 3, format float
+attrib 4: offset 44, normalized 0, components 3, format float
+vertices depth-only: 8450
+vertex stride depth-only: 12
+attrib 0: offset 0, normalized 0, components 3, format float
+mesh 5
+vertices: 541
+indices: 870
+vertex stride: 56
+attrib 0: offset 0, normalized 0, components 3, format float
+attrib 1: offset 12, normalized 0, components 2, format float
+attrib 2: offset 20, normalized 0, components 3, format float
+attrib 3: offset 32, normalized 0, components 3, format float
+attrib 4: offset 44, normalized 0, components 3, format float
+vertices depth-only: 181
+vertex stride depth-only: 12
+attrib 0: offset 0, normalized 0, components 3, format float
+mesh 6
+vertices: 532
+indices: 1518
+vertex stride: 56
+attrib 0: offset 0, normalized 0, components 3, format float
+attrib 1: offset 12, normalized 0, components 2, format float
+attrib 2: offset 20, normalized 0, components 3, format float
+attrib 3: offset 32, normalized 0, components 3, format float
+attrib 4: offset 44, normalized 0, components 3, format float
+vertices depth-only: 484
+vertex stride depth-only: 12
+attrib 0: offset 0, normalized 0, components 3, format float
+mesh 7
+vertices: 3310
+indices: 7368
+vertex stride: 56
+attrib 0: offset 0, normalized 0, components 3, format float
+attrib 1: offset 12, normalized 0, components 2, format float
+attrib 2: offset 20, normalized 0, components 3, format float
+attrib 3: offset 32, normalized 0, components 3, format float
+attrib 4: offset 44, normalized 0, components 3, format float
+vertices depth-only: 1486
+vertex stride depth-only: 12
+attrib 0: offset 0, normalized 0, components 3, format float
+mesh 8
+vertices: 5176
+indices: 17628
+vertex stride: 56
+attrib 0: offset 0, normalized 0, components 3, format float
+attrib 1: offset 12, normalized 0, components 2, format float
+attrib 2: offset 20, normalized 0, components 3, format float
+attrib 3: offset 32, normalized 0, components 3, format float
+attrib 4: offset 44, normalized 0, components 3, format float
+vertices depth-only: 3868
+vertex stride depth-only: 12
+attrib 0: offset 0, normalized 0, components 3, format float
+mesh 9
+vertices: 3652
+indices: 8448
+vertex stride: 56
+attrib 0: offset 0, normalized 0, components 3, format float
+attrib 1: offset 12, normalized 0, components 2, format float
+attrib 2: offset 20, normalized 0, components 3, format float
+attrib 3: offset 32, normalized 0, components 3, format float
+attrib 4: offset 44, normalized 0, components 3, format float
+vertices depth-only: 1480
+vertex stride depth-only: 12
+attrib 0: offset 0, normalized 0, components 3, format float
+mesh 10
+vertices: 8098
+indices: 23136
+vertex stride: 56
+attrib 0: offset 0, normalized 0, components 3, format float
+attrib 1: offset 12, normalized 0, components 2, format float
+attrib 2: offset 20, normalized 0, components 3, format float
+attrib 3: offset 32, normalized 0, components 3, format float
+attrib 4: offset 44, normalized 0, components 3, format float
+vertices depth-only: 4016
+vertex stride depth-only: 12
+attrib 0: offset 0, normalized 0, components 3, format float
+mesh 11
+vertices: 16
+indices: 48
+vertex stride: 56
+attrib 0: offset 0, normalized 0, components 3, format float
+attrib 1: offset 12, normalized 0, components 2, format float
+attrib 2: offset 20, normalized 0, components 3, format float
+attrib 3: offset 32, normalized 0, components 3, format float
+attrib 4: offset 44, normalized 0, components 3, format float
+vertices depth-only: 16
+vertex stride depth-only: 12
+attrib 0: offset 0, normalized 0, components 3, format float
+mesh 12
+vertices: 12537
+indices: 21264
+vertex stride: 56
+attrib 0: offset 0, normalized 0, components 3, format float
+attrib 1: offset 12, normalized 0, components 2, format float
+attrib 2: offset 20, normalized 0, components 3, format float
+attrib 3: offset 32, normalized 0, components 3, format float
+attrib 4: offset 44, normalized 0, components 3, format float
+vertices depth-only: 4020
+vertex stride depth-only: 12
+attrib 0: offset 0, normalized 0, components 3, format float
+mesh 13
+vertices: 1119
+indices: 2640
+vertex stride: 56
+attrib 0: offset 0, normalized 0, components 3, format float
+attrib 1: offset 12, normalized 0, components 2, format float
+attrib 2: offset 20, normalized 0, components 3, format float
+attrib 3: offset 32, normalized 0, components 3, format float
+attrib 4: offset 44, normalized 0, components 3, format float
+vertices depth-only: 484
+vertex stride depth-only: 12
+attrib 0: offset 0, normalized 0, components 3, format float
+mesh 14
+vertices: 7
+indices: 15
+vertex stride: 56
+attrib 0: offset 0, normalized 0, components 3, format float
+attrib 1: offset 12, normalized 0, components 2, format float
+attrib 2: offset 20, normalized 0, components 3, format float
+attrib 3: offset 32, normalized 0, components 3, format float
+attrib 4: offset 44, normalized 0, components 3, format float
+vertices depth-only: 7
+vertex stride depth-only: 12
+attrib 0: offset 0, normalized 0, components 3, format float
+mesh 15
+vertices: 18981
+indices: 56445
+vertex stride: 56
+attrib 0: offset 0, normalized 0, components 3, format float
+attrib 1: offset 12, normalized 0, components 2, format float
+attrib 2: offset 20, normalized 0, components 3, format float
+attrib 3: offset 32, normalized 0, components 3, format float
+attrib 4: offset 44, normalized 0, components 3, format float
+vertices depth-only: 9936
+vertex stride depth-only: 12
+attrib 0: offset 0, normalized 0, components 3, format float
+mesh 16
+vertices: 5012
+indices: 12312
+vertex stride: 56
+attrib 0: offset 0, normalized 0, components 3, format float
+attrib 1: offset 12, normalized 0, components 2, format float
+attrib 2: offset 20, normalized 0, components 3, format float
+attrib 3: offset 32, normalized 0, components 3, format float
+attrib 4: offset 44, normalized 0, components 3, format float
+vertices depth-only: 2400
+vertex stride depth-only: 12
+attrib 0: offset 0, normalized 0, components 3, format float
+mesh 17
+vertices: 36
+indices: 54
+vertex stride: 56
+attrib 0: offset 0, normalized 0, components 3, format float
+attrib 1: offset 12, normalized 0, components 2, format float
+attrib 2: offset 20, normalized 0, components 3, format float
+attrib 3: offset 32, normalized 0, components 3, format float
+attrib 4: offset 44, normalized 0, components 3, format float
+vertices depth-only: 12
+vertex stride depth-only: 12
+attrib 0: offset 0, normalized 0, components 3, format float
+mesh 18
+vertices: 11654
+indices: 43728
+vertex stride: 56
+attrib 0: offset 0, normalized 0, components 3, format float
+attrib 1: offset 12, normalized 0, components 2, format float
+attrib 2: offset 20, normalized 0, components 3, format float
+attrib 3: offset 32, normalized 0, components 3, format float
+attrib 4: offset 44, normalized 0, components 3, format float
+vertices depth-only: 7708
+vertex stride depth-only: 12
+attrib 0: offset 0, normalized 0, components 3, format float
+mesh 19
+vertices: 10157
+indices: 39726
+vertex stride: 56
+attrib 0: offset 0, normalized 0, components 3, format float
+attrib 1: offset 12, normalized 0, components 2, format float
+attrib 2: offset 20, normalized 0, components 3, format float
+attrib 3: offset 32, normalized 0, components 3, format float
+attrib 4: offset 44, normalized 0, components 3, format float
+vertices depth-only: 9331
+vertex stride depth-only: 12
+attrib 0: offset 0, normalized 0, components 3, format float
+mesh 20
+vertices: 10059
+indices: 49536
+vertex stride: 56
+attrib 0: offset 0, normalized 0, components 3, format float
+attrib 1: offset 12, normalized 0, components 2, format float
+attrib 2: offset 20, normalized 0, components 3, format float
+attrib 3: offset 32, normalized 0, components 3, format float
+attrib 4: offset 44, normalized 0, components 3, format float
+vertices depth-only: 8262
+vertex stride depth-only: 12
+attrib 0: offset 0, normalized 0, components 3, format float
+mesh 21
+vertices: 10061
+indices: 49536
+vertex stride: 56
+attrib 0: offset 0, normalized 0, components 3, format float
+attrib 1: offset 12, normalized 0, components 2, format float
+attrib 2: offset 20, normalized 0, components 3, format float
+attrib 3: offset 32, normalized 0, components 3, format float
+attrib 4: offset 44, normalized 0, components 3, format float
+vertices depth-only: 8262
+vertex stride depth-only: 12
+attrib 0: offset 0, normalized 0, components 3, format float
+mesh 22
+vertices: 6709
+indices: 33024
+vertex stride: 56
+attrib 0: offset 0, normalized 0, components 3, format float
+attrib 1: offset 12, normalized 0, components 2, format float
+attrib 2: offset 20, normalized 0, components 3, format float
+attrib 3: offset 32, normalized 0, components 3, format float
+attrib 4: offset 44, normalized 0, components 3, format float
+vertices depth-only: 5508
+vertex stride depth-only: 12
+attrib 0: offset 0, normalized 0, components 3, format float
+mesh 23
+vertices: 2080
+indices: 5760
+vertex stride: 56
+attrib 0: offset 0, normalized 0, components 3, format float
+attrib 1: offset 12, normalized 0, components 2, format float
+attrib 2: offset 20, normalized 0, components 3, format float
+attrib 3: offset 32, normalized 0, components 3, format float
+attrib 4: offset 44, normalized 0, components 3, format float
+vertices depth-only: 1080
+vertex stride depth-only: 12
+attrib 0: offset 0, normalized 0, components 3, format float
+mesh 24
+vertices: 8374
+indices: 43008
+vertex stride: 56
+attrib 0: offset 0, normalized 0, components 3, format float
+attrib 1: offset 12, normalized 0, components 2, format float
+attrib 2: offset 20, normalized 0, components 3, format float
+attrib 3: offset 32, normalized 0, components 3, format float
+attrib 4: offset 44, normalized 0, components 3, format float
+vertices depth-only: 7174
+vertex stride depth-only: 12
+attrib 0: offset 0, normalized 0, components 3, format float
+mesh 25
+vertices: 11085
+indices: 56832
+vertex stride: 56
+attrib 0: offset 0, normalized 0, components 3, format float
+attrib 1: offset 12, normalized 0, components 2, format float
+attrib 2: offset 20, normalized 0, components 3, format float
+attrib 3: offset 32, normalized 0, components 3, format float
+attrib 4: offset 44, normalized 0, components 3, format float
+vertices depth-only: 9480
+vertex stride depth-only: 12
+attrib 0: offset 0, normalized 0, components 3, format float
+mesh 26
+vertices: 8389
+indices: 43008
+vertex stride: 56
+attrib 0: offset 0, normalized 0, components 3, format float
+attrib 1: offset 12, normalized 0, components 2, format float
+attrib 2: offset 20, normalized 0, components 3, format float
+attrib 3: offset 32, normalized 0, components 3, format float
+attrib 4: offset 44, normalized 0, components 3, format float
+vertices depth-only: 7174
+vertex stride depth-only: 12
+attrib 0: offset 0, normalized 0, components 3, format float
+mesh 27
+vertices: 64
+indices: 96
+vertex stride: 56
+attrib 0: offset 0, normalized 0, components 3, format float
+attrib 1: offset 12, normalized 0, components 2, format float
+attrib 2: offset 20, normalized 0, components 3, format float
+attrib 3: offset 32, normalized 0, components 3, format float
+attrib 4: offset 44, normalized 0, components 3, format float
+vertices depth-only: 64
+vertex stride depth-only: 12
+attrib 0: offset 0, normalized 0, components 3, format float
+mesh 28
+vertices: 12018
+indices: 52788
+vertex stride: 56
+attrib 0: offset 0, normalized 0, components 3, format float
+attrib 1: offset 12, normalized 0, components 2, format float
+attrib 2: offset 20, normalized 0, components 3, format float
+attrib 3: offset 32, normalized 0, components 3, format float
+attrib 4: offset 44, normalized 0, components 3, format float
+vertices depth-only: 8896
+vertex stride depth-only: 12
+attrib 0: offset 0, normalized 0, components 3, format float
+mesh 29
+vertices: 1676
+indices: 6696
+vertex stride: 56
+attrib 0: offset 0, normalized 0, components 3, format float
+attrib 1: offset 12, normalized 0, components 2, format float
+attrib 2: offset 20, normalized 0, components 3, format float
+attrib 3: offset 32, normalized 0, components 3, format float
+attrib 4: offset 44, normalized 0, components 3, format float
+vertices depth-only: 1240
+vertex stride depth-only: 12
+attrib 0: offset 0, normalized 0, components 3, format float
+mesh 30
+vertices: 1815
+indices: 4800
+vertex stride: 56
+attrib 0: offset 0, normalized 0, components 3, format float
+attrib 1: offset 12, normalized 0, components 2, format float
+attrib 2: offset 20, normalized 0, components 3, format float
+attrib 3: offset 32, normalized 0, components 3, format float
+attrib 4: offset 44, normalized 0, components 3, format float
+vertices depth-only: 1800
+vertex stride depth-only: 12
+attrib 0: offset 0, normalized 0, components 3, format float
+mesh 31
+vertices: 6516
+indices: 27552
+vertex stride: 56
+attrib 0: offset 0, normalized 0, components 3, format float
+attrib 1: offset 12, normalized 0, components 2, format float
+attrib 2: offset 20, normalized 0, components 3, format float
+attrib 3: offset 32, normalized 0, components 3, format float
+attrib 4: offset 44, normalized 0, components 3, format float
+vertices depth-only: 4740
+vertex stride depth-only: 12
+attrib 0: offset 0, normalized 0, components 3, format float
+mesh 32
+vertices: 2295
+indices: 9126
+vertex stride: 56
+attrib 0: offset 0, normalized 0, components 3, format float
+attrib 1: offset 12, normalized 0, components 2, format float
+attrib 2: offset 20, normalized 0, components 3, format float
+attrib 3: offset 32, normalized 0, components 3, format float
+attrib 4: offset 44, normalized 0, components 3, format float
+vertices depth-only: 1728
+vertex stride depth-only: 12
+attrib 0: offset 0, normalized 0, components 3, format float
+mesh 33
+vertices: 15263
+indices: 43452
+vertex stride: 56
+attrib 0: offset 0, normalized 0, components 3, format float
+attrib 1: offset 12, normalized 0, components 2, format float
+attrib 2: offset 20, normalized 0, components 3, format float
+attrib 3: offset 32, normalized 0, components 3, format float
+attrib 4: offset 44, normalized 0, components 3, format float
+vertices depth-only: 7242
+vertex stride depth-only: 12
+attrib 0: offset 0, normalized 0, components 3, format float
+
+material count: 27
+material diffuse tex:models/material 0
+material diffuse tex:models/sponza_thornmaterial 1
+material diffuse tex:models/vase_roundmaterial 2
+material diffuse tex:models/vase_plantmaterial 3
+material diffuse tex:models/backgroundmaterial 4
+material diffuse tex:models/gi_flagmaterial 5
+material diffuse tex:models/spnza_bricks_amaterial 6
+material diffuse tex:models/sponza_archmaterial 7
+material diffuse tex:models/sponza_ceiling_amaterial 8
+material diffuse tex:models/sponza_column_amaterial 9
+material diffuse tex:models/sponza_floor_amaterial 10
+material diffuse tex:models/sponza_column_cmaterial 11
+material diffuse tex:models/sponza_detailsmaterial 12
+material diffuse tex:models/sponza_column_bmaterial 13
+material diffuse tex:models/whitematerial 14
+material diffuse tex:models/sponza_flagpolematerial 15
+material diffuse tex:models/sponza_fabric_greenmaterial 16
+material diffuse tex:models/sponza_fabric_bluematerial 17
+material diffuse tex:models/sponza_fabricmaterial 18
+material diffuse tex:models/sponza_curtain_bluematerial 19
+material diffuse tex:models/sponza_curtainmaterial 20
+material diffuse tex:models/sponza_curtain_greenmaterial 21
+material diffuse tex:models/chain_texturematerial 22
+material diffuse tex:models/vase_hangingmaterial 23
+material diffuse tex:models/vasematerial 24
+material diffuse tex:models/lionmaterial 25
+material diffuse tex:models/sponza_roofmaterial 26
+
