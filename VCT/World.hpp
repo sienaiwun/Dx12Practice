@@ -37,7 +37,7 @@ namespace SceneView
 
 		inline const BoundingBox& GetBoundingBox() const noexcept { return m_boundingbox; }
 
-		inline const Camera& GetMainCamera() const noexcept { return m_Camera; }
+        inline const Camera& GetMainCamera() const noexcept { return m_Camera; }
 
 		inline Camera& GetMainCamera() noexcept { return m_Camera; }
 
@@ -57,6 +57,10 @@ namespace SceneView
 
 	private:
 
+        const BoundingBox& GetClipBoundingBox(const int level) const;
+
+        void UpdateClipBoundgingBoxs();
+
 		void CaculateBoundingBox();
 
 		Camera m_Camera;
@@ -68,5 +72,9 @@ namespace SceneView
 		BoundingBox m_boundingbox;
 
 		static World* s_world;
+
+        float m_clipRegionBBoxExtentL0{ 16.0f }; 
+
+        std::vector<BoundingBox> m_clip_bboxs;
 	};
 }

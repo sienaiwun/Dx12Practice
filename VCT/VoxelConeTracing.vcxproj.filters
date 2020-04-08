@@ -235,6 +235,9 @@
     <ClCompile Include="VoxelRegion.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="Voxelization.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="Shaders\ModelViewerVS.hlsl">
@@ -294,6 +297,9 @@
       <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="VoxelRegion.hpp">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Voxelization.hpp">
       <Filter>Source Files</Filter>
     </ClInclude>
   </ItemGroup>
