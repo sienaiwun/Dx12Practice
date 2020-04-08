@@ -47,6 +47,8 @@
 #include <wrl.h>
 #include <ppltasks.h>
 #include <gsl\gsl>
+#include <glm/vec3.hpp>
+#include <glm/vec4.hpp>
 
 #include "Utility.h"
 #include "VectorMath.h"
@@ -69,8 +71,7 @@ public:
     T product()
     {
         return std::accumulate(begin(), end(), 1, multiply);
-    }
-    
+    }  
 };
 
 using U8 = uint8_t;

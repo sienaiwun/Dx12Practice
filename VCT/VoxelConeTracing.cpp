@@ -272,7 +272,7 @@ void VoxelConeTracing::Startup( void )
     m_ExtraTextures[5] = lighting->GetLightGridBitMask().GetSRV();
 
     constexpr const uint32_t voxelSizeWithBorder = VOXEL_RESOLUTION + 2;
-    s_voxel_texture.Create(L"voxel", voxelSizeWithBorder * FACE_COUNT, CLIP_REGION_COUNT * voxelSizeWithBorder, voxelSizeWithBorder, DXGI_FORMAT_R8G8B8A8_UINT);
+    s_voxelOpacity.Create(L"voxel Opacity", voxelSizeWithBorder * FACE_COUNT, CLIP_REGION_COUNT * voxelSizeWithBorder, voxelSizeWithBorder, DXGI_FORMAT_R8G8B8A8_UINT);
 }
 
 void VoxelConeTracing::Cleanup( void )

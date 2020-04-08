@@ -1,18 +1,11 @@
-struct GSOutput
-{
-	float4 pos : SV_POSITION;
-};
 
-[maxvertexcount(3)]
-void main(
-	triangle float4 input[3] : SV_POSITION, 
-	inout TriangleStream< GSOutput > output
-)
+struct VSOutput
 {
-	for (uint i = 0; i < 3; i++)
-	{
-		GSOutput element;
-		element.pos = input[i];
-		output.Append(element);
-	}
+    float4 position : SV_Position;
+    float2 texCoord : TexCoord0;
+    float3 normal : Normal;
+};
+float3 main(VSOutput vsOutput) : SV_Target0
+{
+    return float3(1.0f,1.0f,1.0f);
 }
