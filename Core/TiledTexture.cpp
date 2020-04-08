@@ -186,7 +186,7 @@ void TiledTexture::Create(std::wstring folder, U32 Width, U32 Height, DXGI_FORMA
     m_cpu_pages_allocator = std::make_unique<PageAllocator>(m_TileShape.WidthInTexels*m_TileShape.HeightInTexels*m_resTexPixelInBytes);
 
     CD3DX12_HEAP_DESC pageheapDesc(heapOffset, D3D12_HEAP_TYPE_DEFAULT, 0, D3D12_HEAP_FLAG_DENY_BUFFERS | D3D12_HEAP_FLAG_DENY_RT_DS_TEXTURES);
-    ASSERT_SUCCEEDED(g_Device->CreateHeap(&pageheapDesc, IID_PPV_ARGS(&m_page_heaps)))
+    ASSERT_SUCCEEDED(g_Device->CreateHeap(&pageheapDesc, IID_PPV_ARGS(&m_page_heaps)));
 
     m_rootSig.Reset(TiledComputerParams::NumComputeParams, 0);
     m_rootSig[TiledComputerParams::PageCountInfo].InitAsConstants(0, 4, D3D12_SHADER_VISIBILITY_ALL);
