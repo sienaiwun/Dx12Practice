@@ -1,15 +1,3 @@
-//
-// Copyright (c) Microsoft. All rights reserved.
-// This code is licensed under the MIT License (MIT).
-// THIS CODE IS PROVIDED *AS IS* WITHOUT WARRANTY OF
-// ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING ANY
-// IMPLIED WARRANTIES OF FITNESS FOR A PARTICULAR
-// PURPOSE, MERCHANTABILITY, OR NON-INFRINGEMENT.
-//
-// Developed by Minigraph
-//
-// Author:  James Stanard 
-//
 
 #pragma once
 
@@ -93,6 +81,14 @@ using U32x3 = Array<U32, 3>;
 using F32 = float;
 using F32x2 = Array<F32, 2>;
 using F32x3 = Array<F32, 3>;
+
+
+#pragma region voxel
+#define VOXEL_RESOLUTION 128
+#define CLIP_REGION_COUNT 6
+#define FACE_COUNT 6
+#pragma endregion
+
 
 template <typename T, size_t N > Array<T, N> DivideByMultiple(Array <T, N> value, Array <T, N> alignment)
 {

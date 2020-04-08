@@ -1,0 +1,32 @@
+
+cbuffer name :register(b0)
+{
+    float4 g_viewer_pos;
+    float4x4 modelView;
+}
+struct VSInput
+{
+    float3 position : POSITION;
+    float2 texcoord0 : TEXCOORD;
+    float3 normal : NORMAL;
+    float3 tangent : TANGENT;
+    float3 bitangent : BITANGENT;
+};
+
+struct VSOutput
+{
+    float4 position : SV_Position;
+    float2 texCoord : TexCoord0;
+    float3 normal : Normal;
+};
+
+VSOutput main(VSInput vsInput)
+{
+    VSOutput vsOutput;
+
+    vsOutput.position = mul(modelView, float4(vsInput.position, 1.0));
+    vsOutput.texCoord = vsInput.texcoord0;
+   
+    vsOutput.normal = vsInput.normal;
+    return vsOutput;
+}

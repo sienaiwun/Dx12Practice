@@ -1,16 +1,3 @@
-//
-// Copyright (c) Microsoft. All rights reserved.
-// This code is licensed under the MIT License (MIT).
-// THIS CODE IS PROVIDED *AS IS* WITHOUT WARRANTY OF
-// ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING ANY
-// IMPLIED WARRANTIES OF FITNESS FOR A PARTICULAR
-// PURPOSE, MERCHANTABILITY, OR NON-INFRINGEMENT.
-//
-// Developed by Minigraph
-//
-// Author(s):  Alex Nankervis
-//             James Stanard
-//
 
 #include "GameCore.h"
 #include "GraphicsCore.h"
@@ -20,6 +7,7 @@
 #include "Camera.h"
 #include "World.hpp"
 #include "GpuBuffer.h"
+#include "Texture3D.h"
 #include "CommandContext.h"
 #include "SamplerManager.h"
 #include "TemporalEffects.h"
@@ -72,11 +60,11 @@ enum RootParams
 	NumPassRootParams,
 };
 
-class ModelViewer : public GameCore::IGameApp
+class VoxelConeTracing : public GameCore::IGameApp
 {
 public:
 
-    ModelViewer( void ) {}
+    VoxelConeTracing( void ) {}
 
     virtual void Startup( void ) override;
     virtual void Cleanup( void ) override;
@@ -115,6 +103,7 @@ private:
     GraphicsPSO m_ShadowPSO;
     GraphicsPSO m_CutoutShadowPSO;
     GraphicsPSO m_WaveTileCountPSO;
+    GraphicsPSO m_VoxelPassPSO;
 
     D3D12_CPU_DESCRIPTOR_HANDLE m_DefaultSampler;
     D3D12_CPU_DESCRIPTOR_HANDLE m_ShadowSampler;
@@ -127,10 +116,10 @@ private:
     ShadowCamera m_SunShadow;
 };
 
-CREATE_APPLICATION( ModelViewer )
-enum LightingType { kForward, kForward_plus, kDeferred ,kNumLightingModels};
-const char* LightingModelLabels[kNumLightingModels] = { "Forward", "Forward+", "Deferred"};
-EnumVar g_LightingModel("LightingModel", kForward_plus, kNumLightingModels, LightingModelLabels);
+CREATE_APPLICATION( VoxelConeTracing )
+enum LightingType {  kDeferred ,kNumLightingModels};
+const char* LightingModelLabels[kNumLightingModels] = {  "Deferred"};
+EnumVar g_LightingModel("LightingModel", kDeferred, kNumLightingModels, LightingModelLabels);
 
 
 ExpVar m_SunLightIntensity("Application/Lighting/Sun Light Intensity", 4.0f, 0.0f, 16.0f, 0.1f);
@@ -146,7 +135,10 @@ BoolVar ShowWaveTileCounts("Application/Forward+/Show Wave Tile Counts", false);
 BoolVar EnableWaveOps("Application/Forward+/Enable Wave Ops", true);
 #endif
 
-void ModelViewer::Startup( void )
+Texture3D s_voxelOpacity;
+Texture3D s_voxelRadiance;
+
+void VoxelConeTracing::Startup( void )
 {
 	freopen("stdout.txt","w+",stdout);
     SamplerDesc DefaultSamplerDesc;
@@ -278,9 +270,12 @@ void ModelViewer::Startup( void )
     m_ExtraTextures[3] = lighting->GetLightShadowArray().GetSRV();
     m_ExtraTextures[4] = lighting->GetLightGrid().GetSRV();
     m_ExtraTextures[5] = lighting->GetLightGridBitMask().GetSRV();
+
+    constexpr const uint32_t voxelSizeWithBorder = VOXEL_RESOLUTION + 2;
+    s_voxel_texture.Create(L"voxel", voxelSizeWithBorder * FACE_COUNT, CLIP_REGION_COUNT * voxelSizeWithBorder, voxelSizeWithBorder, DXGI_FORMAT_R8G8B8A8_UINT);
 }
 
-void ModelViewer::Cleanup( void )
+void VoxelConeTracing::Cleanup( void )
 {
     m_world.Clear();
 }
@@ -290,7 +285,7 @@ namespace Graphics
     extern EnumVar DebugZoom;
 }
 
-void ModelViewer::Update( float deltaT )
+void VoxelConeTracing::Update( float deltaT )
 {
     ScopedTimer _prof(L"Update State");
 
@@ -363,7 +358,7 @@ __declspec(align(16)) struct
 }psWireFrameColorConstants;
 
 
-void ModelViewer::UpdateGpuWorld(GraphicsContext& gfxContext)
+void VoxelConeTracing::UpdateGpuWorld(GraphicsContext& gfxContext)
 {
     const Camera& cam = m_world.GetMainCamera();
     const Matrix4 invProjMat = Invert(cam.GetProjMatrix());
@@ -383,7 +378,7 @@ void ModelViewer::UpdateGpuWorld(GraphicsContext& gfxContext)
     
 }
 
-void ModelViewer::RenderObjects(GraphicsContext& gfxContext, const Matrix4& viewProjMat, eObjectFilter Filter)
+void VoxelConeTracing::RenderObjects(GraphicsContext& gfxContext, const Matrix4& viewProjMat, eObjectFilter Filter)
 {
 
 	cameraConstant.modelToProjection = viewProjMat;
@@ -424,7 +419,7 @@ void ModelViewer::RenderObjects(GraphicsContext& gfxContext, const Matrix4& view
 	});
 }
 
-void ModelViewer::RenderLightShadows(GraphicsContext& gfxContext)
+void VoxelConeTracing::RenderLightShadows(GraphicsContext& gfxContext)
 {
     ScopedTimer _prof(L"RenderLightShadows", gfxContext);
 
@@ -451,7 +446,7 @@ void ModelViewer::RenderLightShadows(GraphicsContext& gfxContext)
     ++LightIndex;
 }
 
-void ModelViewer::RenderScene( void )
+void VoxelConeTracing::RenderScene( void )
 {
     static bool s_ShowLightCounts = false;
     if (ShowWaveTileCounts != s_ShowLightCounts)
@@ -579,65 +574,51 @@ void ModelViewer::RenderScene( void )
 
             gfxContext.SetDynamicDescriptors(RootParams::LightingSRVs, 0, _countof(m_ExtraTextures), m_ExtraTextures);
             gfxContext.SetDynamicConstantBufferView(RootParams::LightingParam, sizeof(lightingConstants), &lightingConstants);
-			if (g_LightingModel == LightingType::kDeferred)
-			{
-				gfxContext.TransitionResource(g_GBufferColorBuffer, D3D12_RESOURCE_STATE_RENDER_TARGET, true);
-				gfxContext.TransitionResource(g_GBufferNormalBuffer, D3D12_RESOURCE_STATE_RENDER_TARGET, true);
-				gfxContext.TransitionResource(g_GBufferMaterialBuffer, D3D12_RESOURCE_STATE_RENDER_TARGET, true);
-				gfxContext.ClearColor(g_GBufferColorBuffer);
-				gfxContext.ClearColor(g_GBufferNormalBuffer);
-				gfxContext.ClearColor(g_GBufferMaterialBuffer);
-
-				gfxContext.SetPipelineState(m_GBufferPSO);
-				D3D12_CPU_DESCRIPTOR_HANDLE RTVs[] = { g_GBufferColorBuffer.GetRTV(),g_GBufferNormalBuffer.GetRTV(),g_GBufferMaterialBuffer.GetRTV() };
-				gfxContext.SetRenderTargets(3, RTVs, g_SceneDepthBuffer.GetDSV_DepthReadOnly());
-				gfxContext.SetViewportAndScissor(m_MainViewport, m_MainScissor);
-				RenderObjects(gfxContext, camViewProjMat, kOpaque);
-
-
-				gfxContext.TransitionResource(g_GBufferColorBuffer, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, true);
-				gfxContext.TransitionResource(g_GBufferNormalBuffer, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, true);
-				gfxContext.TransitionResource(g_GBufferMaterialBuffer, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, true);
-				gfxContext.TransitionResource(g_SceneDepthBuffer, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, true);
-				D3D12_CPU_DESCRIPTOR_HANDLE GBuffers[4] = { g_GBufferColorBuffer.GetSRV(),g_GBufferNormalBuffer.GetSRV(),g_GBufferMaterialBuffer.GetSRV(),g_SceneDepthBuffer.GetDepthSRV() };
-				gfxContext.SetDynamicDescriptors(RootParams::GBufferSRVs, 0, _countof(GBuffers), GBuffers);
-				gfxContext.TransitionResource(g_SceneColorBuffer, D3D12_RESOURCE_STATE_RENDER_TARGET, true);
-				gfxContext.ClearColor(g_SceneColorBuffer);
-				gfxContext.SetPipelineState(m_DefferedShadingPSO);
-				gfxContext.SetRenderTarget(g_SceneColorBuffer.GetRTV());
-				gfxContext.SetViewportAndScissor(m_MainViewport, m_MainScissor);
-				gfxContext.Draw(3);
-
-			}
-			else
-			{
-				gfxContext.TransitionResource(g_SceneColorBuffer, D3D12_RESOURCE_STATE_RENDER_TARGET, true);
-				gfxContext.ClearColor(g_SceneColorBuffer);
-#ifdef _WAVE_OP
-				gfxContext.SetPipelineState(EnableWaveOps ? m_ModelWaveOpsPSO : m_ForwardPlusPSO);
-#else
-				if (g_LightingModel == LightingType::kForward_plus)
-					gfxContext.SetPipelineState(ShowWaveTileCounts ? m_WaveTileCountPSO : m_ForwardPlusPSO);
-				else
-					gfxContext.SetPipelineState(m_ForwardPSO);
-#endif
-				gfxContext.TransitionResource(g_SceneDepthBuffer, D3D12_RESOURCE_STATE_DEPTH_READ);
-				gfxContext.SetRenderTarget(g_SceneColorBuffer.GetRTV(), g_SceneDepthBuffer.GetDSV_DepthReadOnly());
-				gfxContext.SetViewportAndScissor(m_MainViewport, m_MainScissor);
-
-				RenderObjects(gfxContext, camViewProjMat, kOpaque);
-
-				if (!ShowWaveTileCounts)
-				{
-					gfxContext.SetPipelineState(m_CutoutModelPSO);
-					RenderObjects(gfxContext, camViewProjMat, kCutout);
-				}
-				
-			}
-
 			
+			gfxContext.TransitionResource(g_GBufferColorBuffer, D3D12_RESOURCE_STATE_RENDER_TARGET, true);
+			gfxContext.TransitionResource(g_GBufferNormalBuffer, D3D12_RESOURCE_STATE_RENDER_TARGET, true);
+			gfxContext.TransitionResource(g_GBufferMaterialBuffer, D3D12_RESOURCE_STATE_RENDER_TARGET, true);
+			gfxContext.ClearColor(g_GBufferColorBuffer);
+			gfxContext.ClearColor(g_GBufferNormalBuffer);
+			gfxContext.ClearColor(g_GBufferMaterialBuffer);
+
+			gfxContext.SetPipelineState(m_GBufferPSO);
+			D3D12_CPU_DESCRIPTOR_HANDLE RTVs[] = { g_GBufferColorBuffer.GetRTV(),g_GBufferNormalBuffer.GetRTV(),g_GBufferMaterialBuffer.GetRTV() };
+			gfxContext.SetRenderTargets(3, RTVs, g_SceneDepthBuffer.GetDSV_DepthReadOnly());
+			gfxContext.SetViewportAndScissor(m_MainViewport, m_MainScissor);
+			RenderObjects(gfxContext, camViewProjMat, kOpaque);
         }
 
+
+
+			
+
+			
+        
+
+        {
+            // voxel pass
+            ScopedTimer _prof5(L"Voxel Pass", gfxContext);
+            gfxContext.TransitionResource(s_voxelOpacity, D3D12_RESOURCE_STATE_UNORDERED_ACCESS,true);
+            gfxContext.SetPipelineState(m_VoxelPassPSO);
+            RenderObjects(gfxContext, camViewProjMat, kOpaque);
+        }
+
+        {
+            ScopedTimer _prof6(L"Shading Pass", gfxContext);
+            gfxContext.TransitionResource(g_GBufferColorBuffer, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, true);
+            gfxContext.TransitionResource(g_GBufferNormalBuffer, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, true);
+            gfxContext.TransitionResource(g_GBufferMaterialBuffer, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, true);
+            gfxContext.TransitionResource(g_SceneDepthBuffer, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, true);
+            D3D12_CPU_DESCRIPTOR_HANDLE GBuffers[4] = { g_GBufferColorBuffer.GetSRV(),g_GBufferNormalBuffer.GetSRV(),g_GBufferMaterialBuffer.GetSRV(),g_SceneDepthBuffer.GetDepthSRV() };
+            gfxContext.SetDynamicDescriptors(RootParams::GBufferSRVs, 0, _countof(GBuffers), GBuffers);
+            gfxContext.TransitionResource(g_SceneColorBuffer, D3D12_RESOURCE_STATE_RENDER_TARGET, true);
+            gfxContext.ClearColor(g_SceneColorBuffer);
+            gfxContext.SetPipelineState(m_DefferedShadingPSO);
+            gfxContext.SetRenderTarget(g_SceneColorBuffer.GetRTV());
+            gfxContext.SetViewportAndScissor(m_MainViewport, m_MainScissor);
+            gfxContext.Draw(3);
+        }
     }
     SkyPass::Render(gfxContext, m_world.GetMainCamera());
 
@@ -659,7 +640,7 @@ void ModelViewer::RenderScene( void )
     gfxContext.Finish();
 }
 
-void ModelViewer::CreateParticleEffects()
+void VoxelConeTracing::CreateParticleEffects()
 {
     ParticleEffectProperties Effect = ParticleEffectProperties();
     Effect.MinStartColor = Effect.MaxStartColor = Effect.MinEndColor = Effect.MaxEndColor = Color(1.0f, 1.0f, 1.0f, 0.0f);

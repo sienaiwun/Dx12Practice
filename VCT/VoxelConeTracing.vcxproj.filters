@@ -12,6 +12,12 @@
     <Filter Include="Shaders">
       <UniqueIdentifier>{06dcf987-d5c3-489b-aa0a-88d547a323d5}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Shaders\VoxelPass">
+      <UniqueIdentifier>{667a1389-0165-43e6-bab8-c14a7d7194d1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Shaders\Visualize">
+      <UniqueIdentifier>{97274303-c1e0-48b1-9b37-ed8d52ac5a4b}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <Image Include="Logo.png">
@@ -217,13 +223,13 @@
     </None>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="ModelViewer.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="World.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Light.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="VoxelConeTracing.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -266,6 +272,15 @@
     </FxCompile>
     <FxCompile Include="Shaders\ScreenQuadVS.hlsl">
       <Filter>Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="Shaders\ConservertiveVoxelPassGS.hlsl">
+      <Filter>Shaders\VoxelPass</Filter>
+    </FxCompile>
+    <FxCompile Include="Shaders\ConservertiveVoxelPassVS.hlsl">
+      <Filter>Shaders\VoxelPass</Filter>
+    </FxCompile>
+    <FxCompile Include="Shaders\ConservertiveVoxelPassPS.hlsl">
+      <Filter>Shaders\VoxelPass</Filter>
     </FxCompile>
   </ItemGroup>
   <ItemGroup>
