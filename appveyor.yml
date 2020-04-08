@@ -1,0 +1,26 @@
+###############################################################################
+# General Configuration
+###############################################################################
+version: 1.0.{build}
+
+###############################################################################
+# Environment Configuration
+###############################################################################
+image: Visual Studio 2017
+
+configuration: 
+ - Release
+ - Debug
+platform: 
+  - x64
+
+###############################################################################
+# Build Configuration
+###############################################################################
+build:
+  project: ModelViewer\ModelViewer_VS15.sln
+  verbosity: normal
+
+# Execute script before build
+before_build:
+ - nuget restore ModelViewer\ModelViewer_VS15.sln
