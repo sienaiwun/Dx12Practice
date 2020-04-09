@@ -46,12 +46,16 @@ namespace SceneView
 		m_CameraController.reset(new CameraController(m_Camera, Vector3(kYUnitVector)));
         std::shared_ptr<const ManagedTexture> sky_texture(TextureManager::LoadFromFile(L"sky/sky", true));
         m_Camera.GetSky().SetTexture(std::move(sky_texture));
+
+        UpdateClipBoundgingBoxs();
+        m_voxelization.init(m_clipRegionBBoxExtentL0, m_clip_bboxs);
 	}
 
 	void World::Update(const float deltaT)
 	{
 		m_CameraController->Update(deltaT);
         UpdateClipBoundgingBoxs();
+        m_voxelization.update(m_clip_bboxs);
 	}
 
 	void World::Clear()

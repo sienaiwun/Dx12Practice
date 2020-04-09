@@ -135,9 +135,6 @@ BoolVar ShowWaveTileCounts("Application/Forward+/Show Wave Tile Counts", false);
 BoolVar EnableWaveOps("Application/Forward+/Enable Wave Ops", true);
 #endif
 
-Texture3D s_voxelOpacity;
-Texture3D s_voxelRadiance;
-
 void VoxelConeTracing::Startup( void )
 {
 	freopen("stdout.txt","w+",stdout);
@@ -270,9 +267,6 @@ void VoxelConeTracing::Startup( void )
     m_ExtraTextures[3] = lighting->GetLightShadowArray().GetSRV();
     m_ExtraTextures[4] = lighting->GetLightGrid().GetSRV();
     m_ExtraTextures[5] = lighting->GetLightGridBitMask().GetSRV();
-
-    constexpr const uint32_t voxelSizeWithBorder = VOXEL_RESOLUTION + 2;
-    s_voxelOpacity.Create(L"voxel Opacity", voxelSizeWithBorder * FACE_COUNT, CLIP_REGION_COUNT * voxelSizeWithBorder, voxelSizeWithBorder, DXGI_FORMAT_R8G8B8A8_UINT);
 }
 
 void VoxelConeTracing::Cleanup( void )
@@ -590,19 +584,6 @@ void VoxelConeTracing::RenderScene( void )
         }
 
 
-
-			
-
-			
-        
-
-        {
-            // voxel pass
-            ScopedTimer _prof5(L"Voxel Pass", gfxContext);
-            gfxContext.TransitionResource(s_voxelOpacity, D3D12_RESOURCE_STATE_UNORDERED_ACCESS,true);
-            gfxContext.SetPipelineState(m_VoxelPassPSO);
-            RenderObjects(gfxContext, camViewProjMat, kOpaque);
-        }
 
         {
             ScopedTimer _prof6(L"Shading Pass", gfxContext);

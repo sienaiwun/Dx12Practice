@@ -5,6 +5,7 @@
 #include "CameraController.h"
 #include "Camera.h"
 #include "Light.hpp"
+#include "Voxelization.hpp"
 
 using namespace Math;
 using namespace GameCore;
@@ -76,5 +77,7 @@ namespace SceneView
         float m_clipRegionBBoxExtentL0{ 16.0f }; 
 
         std::vector<BoundingBox> m_clip_bboxs;
+
+        Voxel::Voxelization m_voxelization;
 	};
 }

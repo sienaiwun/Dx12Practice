@@ -17,12 +17,12 @@ namespace Voxel
         /**
          * Returns the minimum position of the clip region in world coordinates.
          */
-        glm::vec3 getMinPosWorld() const { return glm::vec3(minPos) * voxelSize; }
+        Dagon::Vec3f getMinPosWorld() const { return Dagon::Vec3f(minPos) * voxelSize; }
 
         /**
         * Returns the maximum position of the clip region in world coordinates.
         */
-        glm::vec3 getMaxPosWorld() const { return glm::vec3(getMaxPos()) * voxelSize; }
+        Dagon::Vec3f getMaxPosWorld() const { return Dagon::Vec3f(getMaxPos()) * voxelSize; }
 
         /**
         * Returns the minimum position of the clip region in image coordinates using toroidal addressing.
@@ -44,9 +44,9 @@ namespace Voxel
         /**
          * Returns the extent in world coordinates.
          */
-        glm::vec3 getExtentWorld() const { return glm::vec3(extent) * voxelSize; }
+        Dagon::Vec3f getExtentWorld() const { return Dagon::Vec3f(extent) * voxelSize; }
 
-        glm::vec3 getCenterPosWorld() const { return getMinPosWorld() + getExtentWorld() * 0.5f; }
+        Dagon::Vec3f getCenterPosWorld() const { return getMinPosWorld() + getExtentWorld() * 0.5f; }
 
         VoxelRegion toPrevLevelRegion() const
         {

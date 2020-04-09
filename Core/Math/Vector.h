@@ -14,6 +14,8 @@
 #pragma once
 
 #include "Scalar.h"
+#include <glm/vec3.hpp>
+#include <glm/vec4.hpp>
 
 namespace Math
 {
@@ -136,5 +138,27 @@ namespace Math
     protected:
         XMVECTOR m_vec;
     };
+
+    namespace Dagon
+    {
+        template<typename T, glm::qualifier Q>
+        struct Vec3 :public glm::vec<3, T, Q>
+        {
+            GLM_FUNC_DECL GLM_CONSTEXPR Vec3(glm::vec3 const& v)
+            {
+                this->x = v.x;
+                this->y = v.y;
+                this->z = v.z;
+            }
+            GLM_FUNC_DECL GLM_CONSTEXPR Vec3(Vector3 const& v) 
+            {
+                this->x = v.GetX();
+                this->y = v.GetY();
+                this->z = v.GetZ();
+            }
+        };
+        typedef Vec3<float, glm::defaultp>	Vec3f;
+    }
+
 
 } // namespace Math

@@ -288,6 +288,9 @@
     <FxCompile Include="Shaders\ConservertiveVoxelPassPS.hlsl">
       <Filter>Shaders\VoxelPass</Filter>
     </FxCompile>
+    <FxCompile Include="Shaders\ClearClipMapCS.hlsl">
+      <Filter>Shaders\VoxelPass</Filter>
+    </FxCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="World.hpp">
