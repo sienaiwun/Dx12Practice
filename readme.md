@@ -22,3 +22,6 @@ For the view like this:
 ![checkbox_vt.png](https://github.com/sienaiwun/publicImgs/blob/master/imgs/VirtualTexture/checkbox_vt.png?raw=true)
 Only a small subset of the entire texture is loaded. The actual loaded texture is visualized as:
 ![mip_chain.gif](https://github.com/sienaiwun/publicImgs/blob/master/imgs/VirtualTexture/mip_chain.gif?raw=true)
+
+## Voxel cone tracing:
+Work in progress
