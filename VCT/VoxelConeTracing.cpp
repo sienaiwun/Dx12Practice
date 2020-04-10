@@ -367,10 +367,6 @@ void VoxelConeTracing::UpdateGpuWorld(GraphicsContext& gfxContext)
     XMStoreFloat4(&worldConstant.invViewport, { 1.0f / m_MainViewport.Width,1.0f / m_MainViewport.Height,0.0f,0.0f });
     worldConstant.scene_length = m_world.GetBoundingBox().Length();
     gfxContext.SetDynamicConstantBufferView(RootParams::WorldParam, sizeof(worldConstant), &worldConstant);
-
-
-
-    
 }
 
 void VoxelConeTracing::RenderObjects(GraphicsContext& gfxContext, const Matrix4& viewProjMat, eObjectFilter Filter)

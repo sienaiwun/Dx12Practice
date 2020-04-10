@@ -8,7 +8,7 @@ namespace VoxelClear
 
     ConstantBuffer cbv;
 
-    Texture3D* p_tex = nullptr;
+    D3D12_CPU_DESCRIPTOR_HANDLE handle;
 
     void Initialize(void)
     {
@@ -21,17 +21,12 @@ namespace VoxelClear
         s_ClearVoxelCS.Finalize();
     }
 
-
-
     void Apply(ComputeContext& context)
     {
-        ASSERT(p_tex);
-        ScopedTimer _prof(L"Voxel", context);
         context.SetRootSignature(s_RootSignature);
         context.SetPipelineState(s_ClearVoxelCS);
         context.SetDynamicConstantBufferView(0, sizeof(cbv), &cbv);
-        context.TransitionResource(*p_tex, D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
-        context.SetDynamicDescriptor(1, 0, p_tex->GetUAV());
+        context.SetDynamicDescriptor(1, 0, handle);
         context.Dispatch3D(VOXEL_RESOLUTION, VOXEL_RESOLUTION, VOXEL_RESOLUTION,8,8,8);
     }
 
@@ -40,8 +35,9 @@ namespace VoxelClear
         cbv = buffer;
     }
 
-    void SetTexture3D(Texture3D* _tex)
+    void SetUAV(D3D12_CPU_DESCRIPTOR_HANDLE _handle)
     {
-        p_tex = _tex;
+        handle = _handle;
     }
+
 }

@@ -17,6 +17,16 @@ namespace Voxel
 
         void update(const std::vector<BoundingBox>& bboxs);
 
+        void voxelize(GraphicsContext& context);
+
+        inline const D3D12_CPU_DESCRIPTOR_HANDLE& VoxelOpacitySRV() { return m_voxelOpacity.GetSRV(); }
+
+        inline const D3D12_CPU_DESCRIPTOR_HANDLE& VoxelOpacityUAV() { return m_voxelOpacity.GetUAV(); }
+
+        inline const D3D12_CPU_DESCRIPTOR_HANDLE& VoxelRadianceSRV() { return m_voxelRadiance.GetSRV(); }
+
+        inline const D3D12_CPU_DESCRIPTOR_HANDLE& VoxelRadianceUAV() { return m_voxelRadiance.GetUAV(); }
+
     private:
 
         void computeRevoxelizationRegionsClipmap(uint32_t clipmapLevel, const BoundingBox& curBBox);

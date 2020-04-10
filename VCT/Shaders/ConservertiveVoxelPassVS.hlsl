@@ -1,9 +1,4 @@
 
-cbuffer name :register(b0)
-{
-    float4 g_viewer_pos;
-    float4x4 modelView;
-}
 struct VSInput
 {
     float3 position : POSITION;
@@ -24,9 +19,8 @@ VSOutput main(VSInput vsInput)
 {
     VSOutput vsOutput;
 
-    vsOutput.position = mul(modelView, float4(vsInput.position, 1.0));
+    vsOutput.position = float4(vsInput.position, 1.0);
     vsOutput.texCoord = vsInput.texcoord0;
-   
     vsOutput.normal = vsInput.normal;
     return vsOutput;
 }

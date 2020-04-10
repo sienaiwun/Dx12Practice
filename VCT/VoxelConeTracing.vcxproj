@@ -87,6 +87,7 @@
     <ClCompile Include="voxelClear.cpp" />
     <ClCompile Include="VoxelConeTracing.cpp" />
     <ClCompile Include="Voxelization.cpp" />
+    <ClCompile Include="voxelizationPass.cpp" />
     <ClCompile Include="VoxelRegion.cpp" />
     <ClCompile Include="World.cpp" />
   </ItemGroup>
@@ -261,6 +262,7 @@
     <ClInclude Include="Light.hpp" />
     <ClInclude Include="voxelClear.hpp" />
     <ClInclude Include="Voxelization.hpp" />
+    <ClInclude Include="voxelizationPass.hpp" />
     <ClInclude Include="VoxelRegion.hpp" />
     <ClInclude Include="World.hpp" />
   </ItemGroup>

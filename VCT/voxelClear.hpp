@@ -25,7 +25,7 @@ namespace VoxelClear
 
     void SetConstantBuffer(ConstantBuffer buffer);
 
-    void SetTexture3D(Texture3D* tex);
+    void SetUAV(D3D12_CPU_DESCRIPTOR_HANDLE _handle);
     
 
 }

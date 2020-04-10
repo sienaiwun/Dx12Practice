@@ -241,6 +241,9 @@
     <ClCompile Include="voxelClear.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="voxelizationPass.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="Shaders\ModelViewerVS.hlsl">
@@ -309,6 +312,9 @@
       <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="voxelClear.hpp">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="voxelizationPass.hpp">
       <Filter>Source Files</Filter>
     </ClInclude>
   </ItemGroup>

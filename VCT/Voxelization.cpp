@@ -1,19 +1,23 @@
-#pragma region 
+#pragma region header
 #include "GameCore.h"
 #include "CommandContext.h"
 #include "Voxelization.hpp"
 #include "voxelClear.hpp"
+#include "voxelizationPass.hpp"
 #include <glm/glm.hpp>
 
 #pragma endregion
 
+namespace Voxel
+{
+    RootSignature s_RootSignature;
+    GraphicsPSO s_VoxelizePSO;
+}
+
 using namespace Voxel;
-
-
 Voxelization::Voxelization()
 {
     m_clipRegions.resize(CLIP_REGION_COUNT);
-
 }
 
 void Voxelization::init(float extentWorldLevel0, const std::vector<BoundingBox>& clipRegionBBoxes)
@@ -40,8 +44,8 @@ void Voxelization::init(float extentWorldLevel0, const std::vector<BoundingBox>&
     constexpr const uint32_t voxelSizeWithBorder = VOXEL_RESOLUTION + 2;
     m_voxelOpacity.Create(L"voxel Opacity", voxelSizeWithBorder * FACE_COUNT, CLIP_REGION_COUNT * voxelSizeWithBorder, voxelSizeWithBorder, DXGI_FORMAT_R8G8B8A8_UINT);
     m_voxelRadiance.Create(L"voxel Radiance", voxelSizeWithBorder * FACE_COUNT, CLIP_REGION_COUNT * voxelSizeWithBorder, voxelSizeWithBorder, DXGI_FORMAT_R8G8B8A8_UINT);
-
     VoxelClear::Initialize();
+
 }
 
 glm::ivec3 Voxelization::computeChangeDeltaV(uint32_t level, const BoundingBox& cameraRegionBBox)
@@ -122,8 +126,10 @@ void Voxelization::update(const std::vector<BoundingBox>& bboxs)
             computeRevoxelizationRegionsClipmap(i, bboxs.at(i));
         }
     }
+    ComputeContext& context = ComputeContext::Begin(L"Voxel Clear", true);
     {
-        ComputeContext& context = ComputeContext::Begin(L"Voxel Clear",true);
+        ScopedTimer _prof(L"Voxel", context);
+        context.TransitionResource(m_voxelOpacity, D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
         for (uint32_t i = 0; i < CLIP_REGION_COUNT; ++i)
         {
             for (auto& region : m_revoxelizationRegions[i])
@@ -133,11 +139,22 @@ void Voxelization::update(const std::vector<BoundingBox>& bboxs)
                 cbv.u_extent = region.extent;
                 cbv.u_resolution = VOXEL_RESOLUTION;
                 cbv.u_min = region.getMinPosImage(m_clipRegions[i].extent);
-                VoxelClear::SetTexture3D(&m_voxelOpacity);
                 VoxelClear::SetConstantBuffer(cbv);
                 VoxelClear::Apply(context);
               }
         }
-        context.Finish(false);
+    }
+    context.Finish();
+}
+
+void Voxelization::voxelize(GraphicsContext& context)
+{
+    for (int i = 0; i < CLIP_REGION_COUNT; ++i)
+    {
+        // Voxelize the regions
+        for (auto& region : m_revoxelizationRegions[i])
+        {
+            VoxelizationPass::Render(context, region);
+        }
     }
 }
