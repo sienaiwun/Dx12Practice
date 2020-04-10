@@ -21,20 +21,19 @@ void Texture3D::CreateDerivedViews(ID3D12Device* Device, DXGI_FORMAT Format, uin
     SRVDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
 
     RTVDesc.ViewDimension = D3D12_RTV_DIMENSION_TEXTURE3D;
-    RTVDesc.Texture2DArray.MipSlice = 0;
-    RTVDesc.Texture2DArray.FirstArraySlice = 0;
-    RTVDesc.Texture2DArray.ArraySize = (UINT)ArraySize;
+    RTVDesc.Texture3D.MipSlice = 0;
+    RTVDesc.Texture3D.FirstWSlice = 0;
+    RTVDesc.Texture3D.WSize = (UINT)ArraySize;
 
     UAVDesc.ViewDimension = D3D12_UAV_DIMENSION_TEXTURE3D;
-    UAVDesc.Texture2DArray.MipSlice = 0;
-    UAVDesc.Texture2DArray.FirstArraySlice = 0;
-    UAVDesc.Texture2DArray.ArraySize = (UINT)ArraySize;
+    UAVDesc.Texture3D.MipSlice = 0;
+    UAVDesc.Texture3D.FirstWSlice = 0;
+    UAVDesc.Texture3D.WSize = (UINT)ArraySize;
 
     SRVDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE3D;
-    SRVDesc.Texture2DArray.MipLevels = NumMips;
-    SRVDesc.Texture2DArray.MostDetailedMip = 0;
-    SRVDesc.Texture2DArray.FirstArraySlice = 0;
-    SRVDesc.Texture2DArray.ArraySize = (UINT)ArraySize;
+    SRVDesc.Texture3D.MipLevels = NumMips;
+    SRVDesc.Texture3D.MostDetailedMip = 0;
+    SRVDesc.Texture3D.ResourceMinLODClamp = 0;
 
     if (m_SRVHandle.ptr == D3D12_GPU_VIRTUAL_ADDRESS_UNKNOWN)
     {

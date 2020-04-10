@@ -12,7 +12,7 @@ namespace VoxelClear
 {
     void Initialize(void);
 
-    void Apply(ComputeContext context);
+    void Apply(ComputeContext& context);
 
     __declspec(align(16)) struct ConstantBuffer
     {
@@ -22,8 +22,10 @@ namespace VoxelClear
         glm::ivec3 u_extent;
         int u_borderWidth = 1;
     };
-    ConstantBuffer cbv;
 
-    Texture3D tex;
+    void SetConstantBuffer(ConstantBuffer buffer);
+
+    void SetTexture3D(Texture3D* tex);
+    
 
 }

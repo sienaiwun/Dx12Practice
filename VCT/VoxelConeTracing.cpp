@@ -205,12 +205,13 @@ void VoxelConeTracing::Startup( void )
     m_ForwardPlusPSO.Finalize();
 
 	m_GBufferPSO = m_ForwardPlusPSO;
-	DXGI_FORMAT gBufferFormats[] = { g_GBufferNormalBuffer.GetFormat(), g_GBufferNormalBuffer.GetFormat(), g_GBufferMaterialBuffer.GetFormat()};
+	DXGI_FORMAT gBufferFormats[] = { g_GBufferColorBuffer.GetFormat(), g_GBufferNormalBuffer.GetFormat(), g_GBufferMaterialBuffer.GetFormat()};
 	m_GBufferPSO.SetRenderTargetFormats(3, gBufferFormats, DepthFormat);
 	m_GBufferPSO.SetPixelShader(SHADER_ARGS(g_pGBufferPS));
 	m_GBufferPSO.Finalize();
 
 	m_DefferedShadingPSO = m_ForwardPlusPSO;
+    m_DefferedShadingPSO.SetRenderTargetFormat(ColorFormat, DXGI_FORMAT_UNKNOWN);
 	m_DefferedShadingPSO.SetVertexShader(SHADER_ARGS(g_pScreenQuadVS));
 	m_DefferedShadingPSO.SetPixelShader(SHADER_ARGS(g_pDeferredShading));
 	m_DefferedShadingPSO.Finalize();
@@ -572,7 +573,8 @@ void VoxelConeTracing::RenderScene( void )
 			gfxContext.TransitionResource(g_GBufferColorBuffer, D3D12_RESOURCE_STATE_RENDER_TARGET, true);
 			gfxContext.TransitionResource(g_GBufferNormalBuffer, D3D12_RESOURCE_STATE_RENDER_TARGET, true);
 			gfxContext.TransitionResource(g_GBufferMaterialBuffer, D3D12_RESOURCE_STATE_RENDER_TARGET, true);
-			gfxContext.ClearColor(g_GBufferColorBuffer);
+            gfxContext.TransitionResource(g_SceneDepthBuffer, D3D12_RESOURCE_STATE_DEPTH_READ, true);
+            gfxContext.ClearColor(g_GBufferColorBuffer);
 			gfxContext.ClearColor(g_GBufferNormalBuffer);
 			gfxContext.ClearColor(g_GBufferMaterialBuffer);
 
@@ -587,10 +589,10 @@ void VoxelConeTracing::RenderScene( void )
 
         {
             ScopedTimer _prof6(L"Shading Pass", gfxContext);
-            gfxContext.TransitionResource(g_GBufferColorBuffer, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, true);
-            gfxContext.TransitionResource(g_GBufferNormalBuffer, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, true);
-            gfxContext.TransitionResource(g_GBufferMaterialBuffer, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, true);
-            gfxContext.TransitionResource(g_SceneDepthBuffer, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, true);
+            gfxContext.TransitionResource(g_GBufferColorBuffer, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
+            gfxContext.TransitionResource(g_GBufferNormalBuffer, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
+            gfxContext.TransitionResource(g_GBufferMaterialBuffer, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
+            gfxContext.TransitionResource(g_SceneDepthBuffer, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
             D3D12_CPU_DESCRIPTOR_HANDLE GBuffers[4] = { g_GBufferColorBuffer.GetSRV(),g_GBufferNormalBuffer.GetSRV(),g_GBufferMaterialBuffer.GetSRV(),g_SceneDepthBuffer.GetDepthSRV() };
             gfxContext.SetDynamicDescriptors(RootParams::GBufferSRVs, 0, _countof(GBuffers), GBuffers);
             gfxContext.TransitionResource(g_SceneColorBuffer, D3D12_RESOURCE_STATE_RENDER_TARGET, true);
@@ -599,6 +601,8 @@ void VoxelConeTracing::RenderScene( void )
             gfxContext.SetRenderTarget(g_SceneColorBuffer.GetRTV());
             gfxContext.SetViewportAndScissor(m_MainViewport, m_MainScissor);
             gfxContext.Draw(3);
+            gfxContext.TransitionResource(g_SceneDepthBuffer, D3D12_RESOURCE_STATE_DEPTH_READ);
+
         }
     }
     SkyPass::Render(gfxContext, m_world.GetMainCamera());

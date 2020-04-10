@@ -2,6 +2,7 @@
 #include "GameCore.h"
 #include "CommandContext.h"
 #include "Voxelization.hpp"
+#include "voxelClear.hpp"
 #include <glm/glm.hpp>
 
 #pragma endregion
@@ -40,6 +41,7 @@ void Voxelization::init(float extentWorldLevel0, const std::vector<BoundingBox>&
     m_voxelOpacity.Create(L"voxel Opacity", voxelSizeWithBorder * FACE_COUNT, CLIP_REGION_COUNT * voxelSizeWithBorder, voxelSizeWithBorder, DXGI_FORMAT_R8G8B8A8_UINT);
     m_voxelRadiance.Create(L"voxel Radiance", voxelSizeWithBorder * FACE_COUNT, CLIP_REGION_COUNT * voxelSizeWithBorder, voxelSizeWithBorder, DXGI_FORMAT_R8G8B8A8_UINT);
 
+    VoxelClear::Initialize();
 }
 
 glm::ivec3 Voxelization::computeChangeDeltaV(uint32_t level, const BoundingBox& cameraRegionBBox)
@@ -102,6 +104,7 @@ void Voxelization::computeRevoxelizationRegionsClipmap(uint32_t level, const Bou
 
 void Voxelization::update(const std::vector<BoundingBox>& bboxs)
 {
+   
     if (m_forceFullRevoxelization)
     {
         for (uint32_t i = 0; i < CLIP_REGION_COUNT; ++i)
@@ -109,7 +112,7 @@ void Voxelization::update(const std::vector<BoundingBox>& bboxs)
             m_revoxelizationRegions[i].clear();
             m_revoxelizationRegions[i].push_back(m_clipRegions[i]);
         }
-        m_forceFullRevoxelization = false;
+        //m_forceFullRevoxelization = false;
     }
     else
     {
@@ -120,15 +123,21 @@ void Voxelization::update(const std::vector<BoundingBox>& bboxs)
         }
     }
     {
-        GraphicsContext& context = GraphicsContext::Begin(L"Scene Render");
-        ScopedTimer _prof(L"Shading Pass", context);
+        ComputeContext& context = ComputeContext::Begin(L"Voxel Clear",true);
         for (uint32_t i = 0; i < CLIP_REGION_COUNT; ++i)
         {
             for (auto& region : m_revoxelizationRegions[i])
             {
-              //  ImageCleaner::clear6FacesImage3D(*m_voxelOpacity, GL_RGBA8, region.getMinPosImage(m_clipRegions[i].extent), region.extent, VOXEL_RESOLUTION, GLuint(i), 1);
-            }
+                VoxelClear::ConstantBuffer cbv;
+                cbv.u_clipmapLevel = i;
+                cbv.u_extent = region.extent;
+                cbv.u_resolution = VOXEL_RESOLUTION;
+                cbv.u_min = region.getMinPosImage(m_clipRegions[i].extent);
+                VoxelClear::SetTexture3D(&m_voxelOpacity);
+                VoxelClear::SetConstantBuffer(cbv);
+                VoxelClear::Apply(context);
+              }
         }
-        context.Finish();
+        context.Finish(false);
     }
 }

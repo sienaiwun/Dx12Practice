@@ -597,10 +597,10 @@ void ModelViewer::RenderScene( void )
 				RenderObjects(gfxContext, camViewProjMat, kOpaque);
 
 
-				gfxContext.TransitionResource(g_GBufferColorBuffer, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, true);
-				gfxContext.TransitionResource(g_GBufferNormalBuffer, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, true);
-				gfxContext.TransitionResource(g_GBufferMaterialBuffer, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, true);
-				gfxContext.TransitionResource(g_SceneDepthBuffer, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, true);
+				gfxContext.TransitionResource(g_GBufferColorBuffer, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
+				gfxContext.TransitionResource(g_GBufferNormalBuffer, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
+				gfxContext.TransitionResource(g_GBufferMaterialBuffer, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
+				gfxContext.TransitionResource(g_SceneDepthBuffer, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
 				D3D12_CPU_DESCRIPTOR_HANDLE GBuffers[4] = { g_GBufferColorBuffer.GetSRV(),g_GBufferNormalBuffer.GetSRV(),g_GBufferMaterialBuffer.GetSRV(),g_SceneDepthBuffer.GetDepthSRV() };
 				gfxContext.SetDynamicDescriptors(RootParams::GBufferSRVs, 0, _countof(GBuffers), GBuffers);
 				gfxContext.TransitionResource(g_SceneColorBuffer, D3D12_RESOURCE_STATE_RENDER_TARGET, true);
