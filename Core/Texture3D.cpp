@@ -42,6 +42,11 @@ void Texture3D::CreateDerivedViews(ID3D12Device* Device, DXGI_FORMAT Format, uin
         m_SRVHandle = Graphics::AllocateDescriptor(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
     }
 
+    if (m_UAVHandle.ptr == D3D12_GPU_VIRTUAL_ADDRESS_UNKNOWN)
+        m_UAVHandle = Graphics::AllocateDescriptor(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+
+   
+
     ID3D12Resource* Resource = m_pResource.Get();
 
     // Create the render target view
@@ -49,6 +54,9 @@ void Texture3D::CreateDerivedViews(ID3D12Device* Device, DXGI_FORMAT Format, uin
 
     // Create the shader resource view
     Device->CreateShaderResourceView(Resource, &SRVDesc, m_SRVHandle);
+
+    Device->CreateUnorderedAccessView(Resource, nullptr, &UAVDesc, m_UAVHandle);
+
 }
 
 
