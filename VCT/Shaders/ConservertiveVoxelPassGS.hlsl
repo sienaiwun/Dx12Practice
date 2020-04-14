@@ -4,6 +4,7 @@ struct GSOutput
      uint  vpindex  : SV_ViewportArrayIndex;
     float2 texCoord : TexCoord0;
     float3 normal : Normal;
+    float3 posW : TexCoord1;
 };
 
 struct GSInput
@@ -43,6 +44,7 @@ void main(
 		GSOutput element;
         element.position = mul(u_viewProj[i], input[i].position);
         element.vpindex = idx;
+        element.posW = input[i].position.xyz;
         element.texCoord = input[i].texCoord;
         element.normal = input[i].normal;
 		output.Append(element);
