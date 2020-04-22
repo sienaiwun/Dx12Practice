@@ -140,6 +140,7 @@ void Voxelization::update(const std::vector<BoundingBox>& bboxs)
                 cbv.u_resolution = VOXEL_RESOLUTION;
                 cbv.u_min = region.getMinPosImage(m_clipRegions[i].extent);
                 VoxelClear::SetConstantBuffer(cbv);
+                VoxelClear::SetUAV(m_voxelOpacity.GetUAV());
                 VoxelClear::Apply(context);
               }
         }
@@ -149,6 +150,7 @@ void Voxelization::update(const std::vector<BoundingBox>& bboxs)
 
 void Voxelization::voxelize(GraphicsContext& context)
 {
+    ScopedTimer _prof(L"world voxelization", context);
     for (int i = 0; i < CLIP_REGION_COUNT; ++i)
     {
         // Voxelize the regions

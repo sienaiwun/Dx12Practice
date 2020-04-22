@@ -71,17 +71,17 @@ namespace SceneView
 		});
 	}
 
-    const BoundingBox&  World::GetClipBoundingBox(const int level) const
+    const BoundingBox  World::GetClipBoundingBox(const int level) const
     {
         const Vector3 center = m_Camera.GetPosition();
-        float halfSize = 0.5 * m_clipRegionBBoxExtentL0 * std::exp2f(float(level));
+        float halfSize = 0.5f * m_clipRegionBBoxExtentL0 * std::exp2f(float(level));
         return BoundingBox(center - Vector3(halfSize), center + Vector3(halfSize));
     }
 
     void World::UpdateClipBoundgingBoxs()
     {
         m_clip_bboxs.clear();
-        for (size_t i = 0; i < CLIP_REGION_COUNT; ++i)
+        for (int i = 0; i < CLIP_REGION_COUNT; ++i)
             m_clip_bboxs.emplace_back(GetClipBoundingBox(i));
     }
 }

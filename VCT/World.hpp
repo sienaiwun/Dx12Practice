@@ -56,9 +56,11 @@ namespace SceneView
 			}
 		}
 
+        void voxelize(GraphicsContext& context) { m_voxelization.voxelize(context); }
+
 	private:
 
-        const BoundingBox& GetClipBoundingBox(const int level) const;
+        const BoundingBox GetClipBoundingBox(const int level) const;
 
         void UpdateClipBoundgingBoxs();
 

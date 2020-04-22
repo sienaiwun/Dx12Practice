@@ -526,6 +526,7 @@ void VoxelConeTracing::RenderScene( void )
     SSAO::Render(gfxContext, m_world.GetMainCamera());
 
 	m_world.GenerateLightBuffer(gfxContext, m_world.GetMainCamera());
+    m_world.voxelize(gfxContext);
 
     if (!SSAO::DebugDraw)
     {
@@ -581,8 +582,7 @@ void VoxelConeTracing::RenderScene( void )
 			RenderObjects(gfxContext, camViewProjMat, kOpaque);
         }
 
-
-
+       
         {
             ScopedTimer _prof6(L"Shading Pass", gfxContext);
             gfxContext.TransitionResource(g_GBufferColorBuffer, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
