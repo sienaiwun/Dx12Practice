@@ -23,6 +23,7 @@ namespace VoxelClear
 
     void Apply(ComputeContext& context)
     {
+        ASSERT(handle.ptr != D3D12_GPU_VIRTUAL_ADDRESS_NULL && handle.ptr != D3D12_GPU_VIRTUAL_ADDRESS_UNKNOWN);
         context.SetRootSignature(s_RootSignature);
         context.SetPipelineState(s_ClearVoxelCS);
         context.SetDynamicConstantBufferView(0, sizeof(cbv), &cbv);

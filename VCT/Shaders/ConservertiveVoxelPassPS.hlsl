@@ -1,13 +1,15 @@
 
 struct VSOutput
 {
-    float4 position : SV_Position;
     float2 texCoord : TexCoord0;
     float3 normal : Normal;
     float3 posW :TexCoord1;
 };
 #define BORDER_WIDTH  1
-cbuffer CB1 : register(b0)
+
+RWTexture3D<float4> voxel_texture : register(u0);
+
+cbuffer CB1 : register(b1)
 {
 
     int u_clipmapLevel;
@@ -50,8 +52,6 @@ int3 computeImageCoords(float3 posW)
 
     return imageCoords;
 }
-
-RWTexture3D<float4> voxel_texture : register(u0);
 void main(VSOutput vsOutput) 
 {
     int3 imageCoords = computeImageCoords(vsOutput.posW);

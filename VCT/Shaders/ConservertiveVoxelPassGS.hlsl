@@ -1,7 +1,7 @@
 struct GSOutput
 {
 	float4 position : SV_Position;
-     uint  vpindex  : SV_ViewportArrayIndex;
+    uint  vpindex  : SV_ViewportArrayIndex;
     float2 texCoord : TexCoord0;
     float3 normal : Normal;
     float3 posW : TexCoord1;
@@ -17,6 +17,7 @@ struct GSInput
 cbuffer regionInfo: register(b0)
 {
     float4x4 u_viewProj[3];
+    float4x4 u_invViewProj[3];
     float2 u_viewportSizes[3];
 };
 
