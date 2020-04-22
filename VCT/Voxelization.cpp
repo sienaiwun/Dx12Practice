@@ -45,6 +45,7 @@ void Voxelization::init(float extentWorldLevel0, const std::vector<BoundingBox>&
     m_voxelOpacity.Create(L"voxel Opacity", voxelSizeWithBorder * FACE_COUNT, CLIP_REGION_COUNT * voxelSizeWithBorder, voxelSizeWithBorder, DXGI_FORMAT_R8G8B8A8_UINT);
     m_voxelRadiance.Create(L"voxel Radiance", voxelSizeWithBorder * FACE_COUNT, CLIP_REGION_COUNT * voxelSizeWithBorder, voxelSizeWithBorder, DXGI_FORMAT_R8G8B8A8_UINT);
     VoxelClear::Initialize();
+    VoxelizationPass::Initialize();
 
 }
 
@@ -128,7 +129,7 @@ void Voxelization::update(const std::vector<BoundingBox>& bboxs)
     }
     ComputeContext& context = ComputeContext::Begin(L"Voxel Clear", true);
     {
-        ScopedTimer _prof(L"Voxel", context);
+        ScopedTimer _prof(L"Voxel Clear", context);
         context.TransitionResource(m_voxelOpacity, D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
         for (uint32_t i = 0; i < CLIP_REGION_COUNT; ++i)
         {
@@ -140,6 +141,7 @@ void Voxelization::update(const std::vector<BoundingBox>& bboxs)
                 cbv.u_resolution = VOXEL_RESOLUTION;
                 cbv.u_min = region.getMinPosImage(m_clipRegions[i].extent);
                 VoxelClear::SetConstantBuffer(cbv);
+                VoxelClear::SetUAV(m_voxelOpacity.GetUAV());
                 VoxelClear::Apply(context);
               }
         }
@@ -154,7 +156,7 @@ void Voxelization::voxelize(GraphicsContext& context)
         // Voxelize the regions
         for (auto& region : m_revoxelizationRegions[i])
         {
-            VoxelizationPass::Render(context, region);
+            VoxelizationPass::Render(context, region,i);
         }
     }
 }

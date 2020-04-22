@@ -311,9 +311,22 @@ void GraphicsContext::SetViewportAndScissor( const D3D12_VIEWPORT& vp, const D3D
     m_CommandList->RSSetScissorRects( 1, &rect );
 }
 
+void GraphicsContext::SetViewportAndScissors(const UINT nums,const D3D12_VIEWPORT vp[], const D3D12_RECT rect[])
+{
+    ASSERT(nums > 0);
+    m_CommandList->RSSetViewports(nums, vp);
+    m_CommandList->RSSetScissorRects(nums, rect);
+}
+
 void GraphicsContext::SetViewport( const D3D12_VIEWPORT& vp )
 {
     m_CommandList->RSSetViewports( 1, &vp );
+}
+
+void GraphicsContext::SetViewports(const UINT nums , const D3D12_VIEWPORT vps[])
+{
+    ASSERT(nums > 0);
+    m_CommandList->RSSetViewports(nums, vps);
 }
 
 void GraphicsContext::SetViewport( FLOAT x, FLOAT y, FLOAT w, FLOAT h, FLOAT minDepth, FLOAT maxDepth )

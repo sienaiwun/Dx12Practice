@@ -27,6 +27,10 @@ namespace Voxel
 
         inline const D3D12_CPU_DESCRIPTOR_HANDLE& VoxelRadianceUAV() { return m_voxelRadiance.GetUAV(); }
 
+        inline std::vector<VoxelRegion>& GetClieRegions() { return m_clipRegions; }
+
+        inline std::vector<VoxelRegion>& GetRevoxelRegions(const int i) { ASSERT(i >= 0 && i < CLIP_REGION_COUNT); return m_revoxelizationRegions[i]; }
+
     private:
 
         void computeRevoxelizationRegionsClipmap(uint32_t clipmapLevel, const BoundingBox& curBBox);
@@ -40,8 +44,8 @@ namespace Voxel
 
         bool m_forceFullRevoxelization{ false };
 
-
         Texture3D m_voxelOpacity;
+
         Texture3D m_voxelRadiance;
 
     };

@@ -214,9 +214,12 @@ public:
 
     void SetViewport( const D3D12_VIEWPORT& vp );
     void SetViewport( FLOAT x, FLOAT y, FLOAT w, FLOAT h, FLOAT minDepth = 0.0f, FLOAT maxDepth = 1.0f );
+    void SetViewports(const UINT NumVPs, const D3D12_VIEWPORT vps[]);
+
     void SetScissor( const D3D12_RECT& rect );
     void SetScissor( UINT left, UINT top, UINT right, UINT bottom );
     void SetViewportAndScissor( const D3D12_VIEWPORT& vp, const D3D12_RECT& rect );
+    void SetViewportAndScissors(const UINT Nums, const D3D12_VIEWPORT vps[], const D3D12_RECT rects[]);
     void SetViewportAndScissor( UINT x, UINT y, UINT w, UINT h );
     void SetStencilRef( UINT StencilRef );
     void SetBlendFactor( Color BlendFactor );

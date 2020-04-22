@@ -141,6 +141,7 @@ namespace Math
 
     namespace Dagon
     {
+        const float EPSILON5 = 10e-5f;
         template<typename T, glm::qualifier Q>
         struct Vec3 :public glm::vec<3, T, Q>
         {
@@ -155,9 +156,11 @@ namespace Math
                 this->x = v.GetX();
                 this->y = v.GetY();
                 this->z = v.GetZ();
-            }
+            }  
         };
+
         typedef Vec3<float, glm::defaultp>	Vec3f;
+
     }
 
 

@@ -56,6 +56,8 @@ namespace SceneView
 			}
 		}
 
+        inline  Voxel::Voxelization& GetVoxelization() { return m_voxelization; }
+
 	private:
 
         const BoundingBox& GetClipBoundingBox(const int level) const;
