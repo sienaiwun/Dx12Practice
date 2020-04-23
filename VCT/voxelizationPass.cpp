@@ -114,7 +114,7 @@ namespace VoxelizationPass
     void Render(GraphicsContext& context, const VoxelRegion& voxelRegion, const int clip_level)
     {
         SceneView::World * world = SceneView::World::Get();
-        auto & clipRegions = world->GetVoxelization().GetClieRegions();
+        std::vector<VoxelRegion>& clipRegions = world->GetVoxelization().GetClieRegions();
         Dagon::Vec3f regionMinWorld = voxelRegion.getMinPosWorld() - Dagon::EPSILON5;
         Dagon::Vec3f regionMaxWorld = voxelRegion.getMaxPosWorld() + Dagon::EPSILON5;
 
@@ -141,7 +141,7 @@ namespace VoxelizationPass
         context.SetPipelineState(s_voxelPSO);
         context.SetDynamicConstantBufferView(0, sizeof(s_gsbuffer), &s_gsbuffer);
         context.SetDynamicConstantBufferView(1, sizeof(s_psbuffer), &s_psbuffer);
-        context.SetDynamicDescriptor(1, 0, world->GetVoxelization().VoxelOpacityUAV());
+        context.SetDynamicDescriptor(2, 0, world->GetVoxelization().VoxelOpacityUAV());
 
         SceneView::World::Get()->ForEach([&](Model &model)
         {

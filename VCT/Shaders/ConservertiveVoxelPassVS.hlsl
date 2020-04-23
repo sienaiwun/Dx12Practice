@@ -13,6 +13,7 @@ struct VSOutput
     float4 position : SV_Position;
     float2 texCoord : TexCoord0;
     float3 normal : Normal;
+    float3 posW : TexCoord1;
 };
 
 VSOutput main(VSInput vsInput)
@@ -22,5 +23,6 @@ VSOutput main(VSInput vsInput)
     vsOutput.position = float4(vsInput.position, 1.0);
     vsOutput.texCoord = vsInput.texcoord0;
     vsOutput.normal = vsInput.normal;
+    vsOutput.posW = vsInput.position.xyz;
     return vsOutput;
 }

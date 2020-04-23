@@ -1,9 +1,11 @@
 
 struct VSOutput
 {
+    float4 position : SV_Position;
     float2 texCoord : TexCoord0;
     float3 normal : Normal;
-    float3 posW :TexCoord1;
+    float3 posW : TexCoord1;
+    uint  vpindex  : SV_ViewportArrayIndex;
 };
 #define BORDER_WIDTH  1
 

@@ -23,6 +23,10 @@ namespace SceneView
 
 		World();
 
+        World(const World&) = delete;
+
+        World& operator = (const World&) = delete;
+
 		void AddModel(const std::string& filename);
 
 		void Create();
@@ -41,6 +45,8 @@ namespace SceneView
         inline const Camera& GetMainCamera() const noexcept { return m_Camera; }
 
 		inline Camera& GetMainCamera() noexcept { return m_Camera; }
+
+        inline Voxel::Voxelization& GetVoxelization() { return m_voxelization; }
 
         [[nodiscard]]
 		NotNull<Lighting*> GetLighting() noexcept { return NotNull<Lighting*>(m_lighting.get()); }
