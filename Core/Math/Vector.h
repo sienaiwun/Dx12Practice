@@ -147,15 +147,21 @@ namespace Math
         {
             GLM_FUNC_DECL GLM_CONSTEXPR Vec3(glm::vec3 const& v)
             {
-                this->x = v.x;
-                this->y = v.y;
-                this->z = v.z;
+               x = v.x;
+               y = v.y;
+               z = v.z;
             }
-            GLM_FUNC_DECL GLM_CONSTEXPR Vec3(Vector3 const& v) 
+            GLM_FUNC_DECL GLM_CONSTEXPR Vec3(float _x,float _y,float _z)
             {
-                this->x = v.GetX();
-                this->y = v.GetY();
-                this->z = v.GetZ();
+                x = _x;
+                y = _y;
+                z = _z;
+            }
+            GLM_FUNC_DECL GLM_CONSTEXPR Vec3(Vector3 const& v)
+            {
+                x = v.GetX();
+                y = v.GetY();
+                z = v.GetZ();
             }  
         };
 

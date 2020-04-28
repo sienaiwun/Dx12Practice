@@ -82,7 +82,7 @@ namespace SceneView
 
 		static World* s_world;
 
-        float m_clipRegionBBoxExtentL0{ 16.0f }; 
+        float m_clipRegionBBoxExtentL0{ 160.0f }; 
 
         std::vector<BoundingBox> m_clip_bboxs;
 

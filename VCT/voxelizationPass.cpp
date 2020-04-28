@@ -84,7 +84,7 @@ namespace VoxelizationPass
         Dagon::Vec3f size = voxelRegion.getExtentWorld();
         Matrix4 proj[3];
 
-        proj[0] = Matrix4(XMMatrixOrthographicOffCenterRH(0.0f, size.z, 0.0f, size.y, 0.0f, size.x));
+        proj[0] = Matrix4(XMMatrixOrthographicOffCenterRH(-size.z, 0.0f, 0.0f, size.y, 0.0f, size.x));
         proj[1] = Matrix4(XMMatrixOrthographicOffCenterRH(0.0f, size.x, 0.0f, size.z, 0.0f, size.y));
         proj[2] = Matrix4(XMMatrixOrthographicOffCenterRH(0.0f, size.x, 0.0f, size.y, 0.0f, size.z));
 
