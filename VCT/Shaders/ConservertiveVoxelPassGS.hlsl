@@ -44,7 +44,7 @@ void main(
 	for (uint i = 0; i < 3; i++)
 	{
 		GSOutput element;
-        element.position = mul(u_viewProj[i], input[i].position);
+        element.position = mul(u_viewProj[i], float4(input[i].position.xyz,1.0f));
         element.vpindex = idx;
         element.posW = input[i].position.xyz;
         element.texCoord = input[i].texCoord;
