@@ -7,6 +7,8 @@
 #include "Light.hpp"
 #include "Voxelization.hpp"
 
+#include <limits>
+
 using namespace Math;
 using namespace GameCore;
 
@@ -82,7 +84,7 @@ namespace SceneView
 
 		static World* s_world;
 
-        float m_clipRegionBBoxExtentL0{ 160.0f }; 
+        float m_clipRegionBBoxExtentL0{ std::numeric_limits<float>::infinity() };
 
         std::vector<BoundingBox> m_clip_bboxs;
 

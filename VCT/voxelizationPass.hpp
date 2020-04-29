@@ -29,11 +29,15 @@ namespace VoxelizationPass
         int u_clipmapLevel;
         int u_clipmapResolution;
         int u_clipmapResolutionWithBorder;
-
+        int _____;
         F32x3 u_regionMin;
+        float _;
         F32x3 u_regionMax;
+        float __;
         F32x3 u_prevRegionMin;
+        float ___;
         F32x3 u_prevRegionMax;
+        float ____;
         float u_downsampleTransitionRegionSize;
         float u_maxExtent;
         float u_voxelSize;

@@ -14,17 +14,17 @@ RWTexture3D<float4> voxel_texture : register(u0);
 cbuffer CB1 : register(b1)
 {
 
-    int u_clipmapLevel;
-    int u_clipmapResolution;
-    int u_clipmapResolutionWithBorder;
+    int u_clipmapLevel : packoffset(c0.x);
+    int u_clipmapResolution : packoffset(c0.y);
+    int u_clipmapResolutionWithBorder : packoffset(c0.z);
 
-    float3 u_regionMin;
-    float3 u_regionMax;
-    float3 u_prevRegionMin;
-    float3 u_prevRegionMax;
-    float u_downsampleTransitionRegionSize;
-    float u_maxExtent;
-    float u_voxelSize;
+    float3 u_regionMin: packoffset(c1);
+    float3 u_regionMax: packoffset(c2);
+    float3 u_prevRegionMin: packoffset(c3);
+    float3 u_prevRegionMax: packoffset(c4);
+    float u_downsampleTransitionRegionSize : packoffset(c5.x);
+    float u_maxExtent : packoffset(c5.y);
+    float u_voxelSize : packoffset(c5.z);
 }
 
 float3 transformPosWToClipUVW(float3 posW, float3 extent)
@@ -33,7 +33,7 @@ float3 transformPosWToClipUVW(float3 posW, float3 extent)
 }
 
 
-int3 computeImageCoords(float3 posW)
+float3 computeImageCoords(float3 posW)
 {
     float c = u_voxelSize * .25f;
     posW = clamp(posW, u_regionMin + c, u_regionMax - c);
@@ -56,12 +56,12 @@ int3 computeImageCoords(float3 posW)
 }
 void main(VSOutput vsOutput) 
 {
-    int3 imageCoords = computeImageCoords(vsOutput.posW);
+    float3 imageCoords = computeImageCoords(vsOutput.posW);
 
     for (int i = 0; i < 6; ++i)
     {
         // Currently not supporting alpha blending so just make it fully opaque
-        const float4 fillColor = (0.0).xxxx;
+        const float4 fillColor = (1.0).xxxx;
         voxel_texture[imageCoords] = fillColor;
         imageCoords.x += u_clipmapResolutionWithBorder;
     }

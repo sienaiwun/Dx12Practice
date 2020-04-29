@@ -69,6 +69,8 @@ namespace SceneView
 			m_boundingbox.min = Min(m_boundingbox.min, model.GetBoundingBox().min);
 			m_boundingbox.max = Max(m_boundingbox.max, model.GetBoundingBox().max);
 		});
+        Vector3 delta = m_boundingbox.max - m_boundingbox.min;
+        m_clipRegionBBoxExtentL0 = std::max<float>(delta.GetZ(), std::max<float>(delta.GetX(), delta.GetY())) / std::exp2f(float(CLIP_REGION_COUNT));
 	}
 
     const BoundingBox  World::GetClipBoundingBox(const int level) const

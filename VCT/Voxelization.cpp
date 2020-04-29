@@ -42,8 +42,8 @@ void Voxelization::init(float extentWorldLevel0, const std::vector<BoundingBox>&
     m_forceFullRevoxelization = true;
 
     constexpr const uint32_t voxelSizeWithBorder = VOXEL_RESOLUTION + 2;
-    m_voxelOpacity.Create(L"voxel Opacity", voxelSizeWithBorder * FACE_COUNT, CLIP_REGION_COUNT * voxelSizeWithBorder, voxelSizeWithBorder, DXGI_FORMAT_R8G8B8A8_UINT);
-    m_voxelRadiance.Create(L"voxel Radiance", voxelSizeWithBorder * FACE_COUNT, CLIP_REGION_COUNT * voxelSizeWithBorder, voxelSizeWithBorder, DXGI_FORMAT_R8G8B8A8_UINT);
+    m_voxelOpacity.Create(L"voxel Opacity", voxelSizeWithBorder * FACE_COUNT, CLIP_REGION_COUNT * voxelSizeWithBorder, voxelSizeWithBorder, DXGI_FORMAT_R8G8B8A8_UNORM);
+    m_voxelRadiance.Create(L"voxel Radiance", voxelSizeWithBorder * FACE_COUNT, CLIP_REGION_COUNT * voxelSizeWithBorder, voxelSizeWithBorder, DXGI_FORMAT_R8G8B8A8_UNORM);
     VoxelClear::Initialize();
     VoxelizationPass::Initialize();
 

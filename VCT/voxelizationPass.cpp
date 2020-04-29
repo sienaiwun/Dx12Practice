@@ -33,11 +33,13 @@ namespace VoxelizationPass
         };
         gsl::span<const D3D12_INPUT_ELEMENT_DESC> input_element_decs = gsl::make_span(vertElem);
 
-        s_voxelPSO.SetRasterizerState(Graphics::RasterizerDefault);
+        s_voxelPSO.SetRasterizerState(Graphics::RasterizerTwoSided);
         s_voxelPSO.SetInputLayout(input_element_decs.size(), input_element_decs.data());
         s_voxelPSO.SetPrimitiveTopologyType(D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE);
         s_voxelPSO.SetRenderTargetFormats(0, nullptr, DXGI_FORMAT_UNKNOWN);
 
+        s_voxelPSO.SetBlendState(Graphics::BlendTraditional);
+        s_voxelPSO.SetDepthStencilState(Graphics::DepthStateDisabled);
         s_voxelPSO.Finalize();
     }
 
@@ -130,6 +132,8 @@ namespace VoxelizationPass
         s_psbuffer.u_clipmapLevel = clip_level;
         s_psbuffer.u_maxExtent = clipRegions[clip_level].getExtentWorld().x;
         s_psbuffer.u_voxelSize = clipRegions[clip_level].voxelSize;
+        s_psbuffer.u_clipmapResolution = VOXEL_RESOLUTION;
+        s_psbuffer.u_clipmapResolutionWithBorder = VOXEL_RESOLUTION + 2;
 
         if (clip_level > 0)
         {
