@@ -76,9 +76,11 @@ using U32 = uint32_t;
 using U32x1 = U32;
 using U32x2 = Array<U32, 2>;
 using U32x3 = Array<U32, 3>;
+using U32x4 = Array<U32, 4>;
 using F32 = float;
 using F32x2 = Array<F32, 2>;
 using F32x3 = Array<F32, 3>;
+using F32x4 = Array<F32, 4>;
 
 
 #pragma region voxel

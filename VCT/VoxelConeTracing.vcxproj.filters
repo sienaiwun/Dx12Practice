@@ -244,6 +244,12 @@
     <ClCompile Include="voxelizationPass.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="VisualizeMesh.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="VoxelVisualizePass.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="Shaders\ModelViewerVS.hlsl">
@@ -297,6 +303,15 @@
     <FxCompile Include="Shaders\ClearClipMapCS.hlsl">
       <Filter>Shaders\VoxelPass</Filter>
     </FxCompile>
+    <FxCompile Include="Shaders\VoxelVisualizeGS.hlsl">
+      <Filter>Shaders\Visualize</Filter>
+    </FxCompile>
+    <FxCompile Include="Shaders\VoxelVisualizePS.hlsl">
+      <Filter>Shaders\Visualize</Filter>
+    </FxCompile>
+    <FxCompile Include="Shaders\VoxelVisualizeVS.hlsl">
+      <Filter>Shaders\Visualize</Filter>
+    </FxCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="World.hpp">
@@ -315,6 +330,12 @@
       <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="voxelizationPass.hpp">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="VoxelVisualizePass.hpp">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="VisualizeMesh.hpp">
       <Filter>Source Files</Filter>
     </ClInclude>
   </ItemGroup>

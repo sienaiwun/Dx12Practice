@@ -84,11 +84,13 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="Light.cpp" />
+    <ClCompile Include="VisualizeMesh.cpp" />
     <ClCompile Include="voxelClear.cpp" />
     <ClCompile Include="VoxelConeTracing.cpp" />
     <ClCompile Include="Voxelization.cpp" />
     <ClCompile Include="voxelizationPass.cpp" />
     <ClCompile Include="VoxelRegion.cpp" />
+    <ClCompile Include="VoxelVisualizePass.cpp" />
     <ClCompile Include="World.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -254,16 +256,36 @@
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Vertex</ShaderType>
       <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release|x64'">5.0</ShaderModel>
     </FxCompile>
+    <FxCompile Include="Shaders\VoxelVisualizePS.hlsl">
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Pixel</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Profile|x64'">Pixel</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Pixel</ShaderType>
+    </FxCompile>
+    <FxCompile Include="Shaders\VoxelVisualizeVS.hlsl">
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Vertex</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Profile|x64'">Vertex</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Vertex</ShaderType>
+    </FxCompile>
+    <FxCompile Include="Shaders\VoxelVisualizeGS.hlsl">
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Geometry</ShaderType>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">4.0</ShaderModel>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Profile|x64'">Geometry</ShaderType>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Profile|x64'">4.0</ShaderModel>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Geometry</ShaderType>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release|x64'">4.0</ShaderModel>
+    </FxCompile>
     <FxCompile Include="Shaders\WaveTileCountPS.hlsl">
       <ShaderType>Pixel</ShaderType>
     </FxCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Light.hpp" />
+    <ClInclude Include="VisualizeMesh.hpp" />
     <ClInclude Include="voxelClear.hpp" />
     <ClInclude Include="Voxelization.hpp" />
     <ClInclude Include="voxelizationPass.hpp" />
     <ClInclude Include="VoxelRegion.hpp" />
+    <ClInclude Include="VoxelVisualizePass.hpp" />
     <ClInclude Include="World.hpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
