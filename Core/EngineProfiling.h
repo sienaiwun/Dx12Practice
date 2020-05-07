@@ -24,8 +24,9 @@ namespace EngineProfiling
 
     void BeginBlock(const std::wstring& name, CommandContext* Context = nullptr);
     void EndBlock(CommandContext* Context = nullptr);
-
+    void SetCameraPosition(float x, float y, float z);
     void DisplayFrameRate(TextContext& Text);
+    void DisplayCameraPos(TextContext& Text);
     void DisplayPerfGraph(GraphicsContext& Text);
     void Display(TextContext& Text, float x, float y, float w, float h);
     bool IsPaused();

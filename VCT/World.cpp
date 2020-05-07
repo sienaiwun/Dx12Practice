@@ -60,6 +60,8 @@ namespace SceneView
         UpdateClipBoundgingBoxs();
         m_voxelization.Update(m_clip_bboxs);
         m_voxelization.ToggleVisualization(VoxelVisualize);
+        const Vector3& cam_pos = m_Camera.GetPosition();
+        EngineProfiling::SetCameraPosition(cam_pos.GetX(), cam_pos.GetY(), cam_pos.GetZ());
 	}
 
 	void World::Clear()

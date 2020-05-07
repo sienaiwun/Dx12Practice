@@ -425,7 +425,9 @@ namespace EngineProfiling
     BoolVar DrawProfiler("Display Profiler", false);
     //BoolVar DrawPerfGraph("Display Performance Graph", false);
     const bool DrawPerfGraph = false;
-    
+    static float camera_x, camera_y, camera_z;
+    static bool DrawCameraPos = false;
+
     void Update( void )
     {
         if (GameInput::IsFirstPressed( GameInput::kStartButton ) 
@@ -449,6 +451,22 @@ namespace EngineProfiling
     bool IsPaused()
     {
         return Paused;
+    }
+
+    void SetCameraPosition(float x, float y, float z)
+    {
+        camera_x = x;
+        camera_y = y;
+        camera_z = z;
+        DrawCameraPos = true;
+    }
+
+    void DisplayCameraPos(TextContext& Text)
+    {
+        if (!DrawCameraPos)
+            return;
+        Text.DrawFormattedString("Camera Position (%5.3f, %5.3f, %5.3f)\n",
+            camera_x, camera_y, camera_z);
     }
 
     void DisplayFrameRate( TextContext& Text )

@@ -56,6 +56,9 @@ float3 computeImageCoords(float3 posW)
 }
 void main(VSOutput vsOutput) 
 {
+
+    if (any(vsOutput.posW < u_regionMin) || any(vsOutput.posW > u_regionMax))
+        return;
     float3 imageCoords = computeImageCoords(vsOutput.posW);
 
     for (int i = 0; i < 6; ++i)

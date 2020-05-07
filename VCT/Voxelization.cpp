@@ -119,7 +119,15 @@ void Voxelization::Update(const std::vector<BoundingBox>& bboxs)
             m_revoxelizationRegions[i].clear();
             m_revoxelizationRegions[i].push_back(m_clipRegions[i]);
         }
-        //m_forceFullRevoxelization = false;
+        for (uint32_t clipmapLevel = 0; clipmapLevel < CLIP_REGION_COUNT; ++clipmapLevel)
+        {
+            auto& clipRegion = m_clipRegions[clipmapLevel];
+
+            glm::ivec3 delta = computeChangeDeltaV(clipmapLevel, bboxs.at(clipmapLevel));
+
+            clipRegion.minPos += delta;
+        }
+
     }
     else
     {
@@ -175,7 +183,8 @@ void Voxelization::Visualize(GraphicsContext& context, const Math::Matrix4& mvpM
     bool hasMultipleFaces = false;
     auto clipRegions = GetClieRegions();
     
-    for (int i = 0; i < 6; ++i)
+  
+    for (int i = 0; i < CLIP_REGION_COUNT; ++i)
     {
         m_voxelvisualize.Visualize3DClipmapGS(clipRegions.at(size_t(i)), uint32_t(i), prevRegion, mvpMatrix, hasPrevLevel, hasMultipleFaces, numColorComponents);
         m_voxelvisualize.DrawClip(context, m_voxelOpacity.GetSRV());
