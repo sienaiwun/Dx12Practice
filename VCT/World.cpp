@@ -4,6 +4,9 @@
 
 namespace SceneView
 {
+
+    BoolVar VoxelVisualize("Voxel/VoxVisual", true);
+
 	World* World::s_world = nullptr;
 
 	World::World()
@@ -48,14 +51,15 @@ namespace SceneView
         m_Camera.GetSky().SetTexture(std::move(sky_texture));
 
         UpdateClipBoundgingBoxs();
-        m_voxelization.init(m_clipRegionBBoxExtentL0, m_clip_bboxs);
+        m_voxelization.Init(m_clipRegionBBoxExtentL0, m_clip_bboxs);
 	}
 
 	void World::Update(const float deltaT)
 	{
 		m_CameraController->Update(deltaT);
         UpdateClipBoundgingBoxs();
-        m_voxelization.update(m_clip_bboxs);
+        m_voxelization.Update(m_clip_bboxs);
+        m_voxelization.ToggleVisualization(VoxelVisualize);
 	}
 
 	void World::Clear()

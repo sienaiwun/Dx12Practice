@@ -5,6 +5,7 @@
 #include "VoxelVisualizePass.hpp"
 #include "VisualizeMesh.hpp"
 #include "Texture3D.h"
+#include "VoxelRegion.hpp"
 
 using namespace Voxel;
 namespace VoxelVisualization
@@ -36,6 +37,8 @@ namespace VoxelVisualization
         float u_alpha;
     };
 
+    void Initialize(void);
+
     class VoxelVisualize
     {
     public:
@@ -43,8 +46,10 @@ namespace VoxelVisualization
         ~VoxelVisualize() = default;
         VoxelVisualize(const VoxelVisualize& _) = delete;
         VoxelVisualize& operator = (const VoxelVisualize& _) = delete;
-        void Visualize(GraphicsContext& context, const Texture3D& tex);
+        void DrawClip(GraphicsContext& context, const D3D12_CPU_DESCRIPTOR_HANDLE& texSrv);
         void InitMesh(const size_t res_num);
+        void Visualize3DClipmapGS( const VoxelRegion& region, U32 clipmapLevel, const VoxelRegion& prevRegion, const Math::Matrix4& mvp,
+            bool hasPrevLevel, bool hasFaces, int numColorComponents);
     private:
         std::unique_ptr<VisualMesh> m_visual_mesh = nullptr;
     };

@@ -2,6 +2,7 @@
 #pragma once
 #include "VoxelRegion.hpp"
 #include "Texture3D.h"
+#include "VoxelVisualizePass.hpp"
 
 using namespace Math;
 using namespace GameCore;
@@ -13,11 +14,17 @@ namespace Voxel
     public:
         explicit Voxelization();
 
-        void init(float extentWorldLevel0, const std::vector<BoundingBox>& clipRegionBBoxes);
+        void Init(float extentWorldLevel0, const std::vector<BoundingBox>& clipRegionBBoxes);
 
-        void update(const std::vector<BoundingBox>& bboxs);
+        void Update(const std::vector<BoundingBox>& bboxs);
 
-        void voxelize(GraphicsContext& context);
+        void Voxelize(GraphicsContext& context);
+
+        void Visualize(GraphicsContext& context, const Math::Matrix4& mvpMatrix);
+
+        inline void ToggleVisualization(bool flag) noexcept { m_visualize = flag; }
+
+        inline bool GetVisualization() noexcept { return m_visualize; } 
 
         inline const D3D12_CPU_DESCRIPTOR_HANDLE& VoxelOpacitySRV() { return m_voxelOpacity.GetSRV(); }
 
@@ -40,6 +47,7 @@ namespace Voxel
         int m_minChange[CLIP_REGION_COUNT] = { 2, 2, 2, 2, 2, 1 };
 
         std::vector<VoxelRegion> m_clipRegions;
+
         std::vector<VoxelRegion> m_revoxelizationRegions[CLIP_REGION_COUNT];
 
         bool m_forceFullRevoxelization{ false };
@@ -47,6 +55,10 @@ namespace Voxel
         Texture3D m_voxelOpacity;
 
         Texture3D m_voxelRadiance;
+
+        VoxelVisualization::VoxelVisualize m_voxelvisualize;
+
+        bool m_visualize;
 
     };
 }

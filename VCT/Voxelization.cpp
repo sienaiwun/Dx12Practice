@@ -15,12 +15,12 @@ namespace Voxel
 }
 
 using namespace Voxel;
-Voxelization::Voxelization()
+Voxelization::Voxelization():m_visualize(false)
 {
     m_clipRegions.resize(CLIP_REGION_COUNT);
 }
 
-void Voxelization::init(float extentWorldLevel0, const std::vector<BoundingBox>& clipRegionBBoxes)
+void Voxelization::Init(float extentWorldLevel0, const std::vector<BoundingBox>& clipRegionBBoxes)
 {
     int extent = VOXEL_RESOLUTION;
     int halfExtent = extent / 2;
@@ -46,6 +46,8 @@ void Voxelization::init(float extentWorldLevel0, const std::vector<BoundingBox>&
     m_voxelRadiance.Create(L"voxel Radiance", voxelSizeWithBorder * FACE_COUNT, CLIP_REGION_COUNT * voxelSizeWithBorder, voxelSizeWithBorder, DXGI_FORMAT_R8G8B8A8_UNORM);
     VoxelClear::Initialize();
     VoxelizationPass::Initialize();
+    VoxelVisualization::Initialize();
+    m_voxelvisualize.InitMesh(VOXEL_RESOLUTION);
 
 }
 
@@ -107,7 +109,7 @@ void Voxelization::computeRevoxelizationRegionsClipmap(uint32_t level, const Bou
 }
 
 
-void Voxelization::update(const std::vector<BoundingBox>& bboxs)
+void Voxelization::Update(const std::vector<BoundingBox>& bboxs)
 {
    
     if (m_forceFullRevoxelization)
@@ -149,7 +151,7 @@ void Voxelization::update(const std::vector<BoundingBox>& bboxs)
     context.Finish();
 }
 
-void Voxelization::voxelize(GraphicsContext& context)
+void Voxelization::Voxelize(GraphicsContext& context)
 {
     ScopedTimer _prof(L"world voxelization", context);
     for (int i = 0; i < CLIP_REGION_COUNT; ++i)
@@ -160,4 +162,25 @@ void Voxelization::voxelize(GraphicsContext& context)
             VoxelizationPass::Render(context, region,i);
         }
     }
+}
+
+void Voxelization::Visualize(GraphicsContext& context, const Math::Matrix4& mvpMatrix)
+{
+    if (!m_visualize)
+        return;
+    ScopedTimer _prof(L"world voxelization", context);
+    VoxelRegion prevRegion;
+    bool hasPrevLevel = false;
+    int numColorComponents = 4;
+    bool hasMultipleFaces = false;
+    auto clipRegions = GetClieRegions();
+    
+    for (int i = 0; i < 6; ++i)
+    {
+        m_voxelvisualize.Visualize3DClipmapGS(clipRegions.at(size_t(i)), uint32_t(i), prevRegion, mvpMatrix, hasPrevLevel, hasMultipleFaces, numColorComponents);
+        m_voxelvisualize.DrawClip(context, m_voxelOpacity.GetSRV());
+        hasPrevLevel = true;
+        prevRegion = clipRegions.at(size_t(i));
+    }
+
 }

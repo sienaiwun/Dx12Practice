@@ -64,7 +64,9 @@ namespace SceneView
 			}
 		}
 
-        void voxelize(GraphicsContext& context) { m_voxelization.voxelize(context); }
+        void voxelize(GraphicsContext& context) { m_voxelization.Voxelize(context); }
+
+        void voxelVisualize(GraphicsContext& context) { m_voxelization.Visualize(context, m_Camera.GetViewProjMatrix()); };
 
 	private:
 

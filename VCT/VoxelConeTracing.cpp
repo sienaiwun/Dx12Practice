@@ -580,10 +580,13 @@ void VoxelConeTracing::RenderScene( void )
 			gfxContext.SetRenderTargets(3, RTVs, g_SceneDepthBuffer.GetDSV_DepthReadOnly());
 			gfxContext.SetViewportAndScissor(m_MainViewport, m_MainScissor);
 			RenderObjects(gfxContext, camViewProjMat, kOpaque);
+           
+            m_world.voxelVisualize(gfxContext);
         }
 
        
         {
+            pfnSetupGraphicsState();
             ScopedTimer _prof6(L"Shading Pass", gfxContext);
             gfxContext.TransitionResource(g_GBufferColorBuffer, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
             gfxContext.TransitionResource(g_GBufferNormalBuffer, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
