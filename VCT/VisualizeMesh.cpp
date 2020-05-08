@@ -15,7 +15,7 @@ namespace Voxel
             for(size_t y =0;y<resolution;y++)
                 for(size_t z = 0;z<resolution;z++)
                     vertices.emplace_back(F32x3{(float) x, (float)y, (float)z });
-        m_VertexBuffer.Create(L"voxelBuffer", m_vertexCount, sizeof(F32x3), vertices.data());
+        m_VertexBuffer.Create(L"voxelBuffer",(U32)m_vertexCount, sizeof(F32x3), vertices.data());
     }
 
     VisualMesh::~VisualMesh()
@@ -28,6 +28,6 @@ namespace Voxel
         assert(m_vertexCount > 0);
         context.SetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_POINTLIST);
         context.SetVertexBuffer(0, m_VertexBuffer.VertexBufferView());
-        context.Draw(m_vertexCount,0);
+        context.Draw((UINT)m_vertexCount,0);
     }
 }

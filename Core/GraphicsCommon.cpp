@@ -47,6 +47,7 @@ namespace Graphics
     D3D12_RASTERIZER_DESC RasterizerShadowCW;
     D3D12_RASTERIZER_DESC RasterizerShadowTwoSided;
 	D3D12_RASTERIZER_DESC RasterizerDefaultWireFrame;    // Counter-clockwise
+    D3D12_RASTERIZER_DESC RasterizerTwoSidedConservative;
 
     D3D12_BLEND_DESC BlendNoColorWrite;
     D3D12_BLEND_DESC BlendDisable;
@@ -119,6 +120,7 @@ void Graphics::InitializeCommonState(void)
     RasterizerDefault.ForcedSampleCount = 0;
     RasterizerDefault.ConservativeRaster = D3D12_CONSERVATIVE_RASTERIZATION_MODE_OFF;
 
+
     RasterizerDefaultMsaa = RasterizerDefault;
     RasterizerDefaultMsaa.MultisampleEnable = TRUE;
 
@@ -135,6 +137,9 @@ void Graphics::InitializeCommonState(void)
 
     RasterizerTwoSided = RasterizerDefault;
     RasterizerTwoSided.CullMode = D3D12_CULL_MODE_NONE;
+
+    RasterizerTwoSidedConservative = RasterizerTwoSided;
+    RasterizerTwoSidedConservative.ConservativeRaster = D3D12_CONSERVATIVE_RASTERIZATION_MODE_ON;
 
     RasterizerTwoSidedMsaa = RasterizerTwoSided;
     RasterizerTwoSidedMsaa.MultisampleEnable = TRUE;

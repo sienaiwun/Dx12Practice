@@ -45,7 +45,8 @@ namespace Graphics
     extern D3D12_RASTERIZER_DESC RasterizerShadow;
     extern D3D12_RASTERIZER_DESC RasterizerShadowCW;
     extern D3D12_RASTERIZER_DESC RasterizerShadowTwoSided;
-	extern D3D12_RASTERIZER_DESC RasterizerDefaultWireFrame;
+    extern D3D12_RASTERIZER_DESC RasterizerDefaultWireFrame;
+    extern D3D12_RASTERIZER_DESC RasterizerTwoSidedConservative;
 
     extern D3D12_BLEND_DESC BlendNoColorWrite;        // XXX
     extern D3D12_BLEND_DESC BlendDisable;            // 1, 0

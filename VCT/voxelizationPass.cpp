@@ -33,7 +33,7 @@ namespace VoxelizationPass
         };
         gsl::span<const D3D12_INPUT_ELEMENT_DESC> input_element_decs = gsl::make_span(vertElem);
 
-        s_voxelPSO.SetRasterizerState(Graphics::RasterizerTwoSided);
+        s_voxelPSO.SetRasterizerState(Graphics::RasterizerTwoSidedConservative);
         s_voxelPSO.SetInputLayout(input_element_decs.size(), input_element_decs.data());
         s_voxelPSO.SetPrimitiveTopologyType(D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE);
         s_voxelPSO.SetRenderTargetFormats(0, nullptr, DXGI_FORMAT_UNKNOWN);
@@ -87,8 +87,8 @@ namespace VoxelizationPass
         Matrix4 proj[3];
 
         proj[0] = Matrix4(XMMatrixOrthographicOffCenterRH(-size.z, 0.0f, 0.0f, size.y, 0.0f, size.x));
-        proj[1] = Matrix4(XMMatrixOrthographicOffCenterRH(0.0f, size.x, 0.0f, size.z, 0.0f, size.y));
-        proj[2] = Matrix4(XMMatrixOrthographicOffCenterRH(0.0f, size.x, 0.0f, size.y, 0.0f, size.z));
+        proj[1] = Matrix4(XMMatrixOrthographicOffCenterRH(-size.x, 0.0f, 0.0f, size.z, 0.0f, size.y));
+        proj[2] = Matrix4(XMMatrixOrthographicOffCenterRH(-size.x, 0.0f, 0.0f, size.y, 0.0f, size.z));
 
         Matrix4 viewProj[3];
         Matrix4 viewProjInv[3];
