@@ -5,7 +5,7 @@
 namespace SceneView
 {
 
-    BoolVar VoxelVisualize("Voxel/VoxVisual", true);
+    BoolVar VoxelVisualize("Voxel/Voxel Visual", false);
 
 	World* World::s_world = nullptr;
 

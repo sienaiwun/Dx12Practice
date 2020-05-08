@@ -28,7 +28,7 @@ namespace SceneView
 {
 	extern IntVar LightGridDim;
 
-	enum { MaxLights = 128 };
+	enum { MaxLights = 1 };
 
 	enum { shadowDim = 512 };
 
