@@ -48,7 +48,7 @@ namespace VoxelVisualization
         s_voxel_visualPSO.SetPrimitiveTopologyType(D3D12_PRIMITIVE_TOPOLOGY_TYPE_POINT);
         DXGI_FORMAT gBufferFormats[] = { g_GBufferColorBuffer.GetFormat(), g_GBufferNormalBuffer.GetFormat(), g_GBufferMaterialBuffer.GetFormat() };
         s_voxel_visualPSO.SetRenderTargetFormats(3, gBufferFormats, Graphics::g_SceneDepthBuffer.GetFormat());
-        s_voxel_visualPSO.SetBlendState(Graphics::BlendTraditional);
+        s_voxel_visualPSO.SetBlendState(Graphics::BlendDisable);
         s_voxel_visualPSO.SetDepthStencilState(Graphics::DepthStateGreatEqual);
         s_voxel_visualPSO.Finalize();
     }
